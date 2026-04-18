@@ -75,10 +75,20 @@ code {
 }
 
 .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
     font-size: 1.45rem;
     font-weight: 700;
     letter-spacing: 0.02em;
     text-transform: uppercase;
+}
+
+.brand-mark {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid rgba(53, 40, 29, 0.18);
 }
 
 .topnav {
@@ -153,6 +163,20 @@ code {
 
 .hero {
     text-align: center;
+}
+
+.hero-mark {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.hero-mark img {
+    width: 88px;
+    height: 88px;
+    border-radius: 24px;
+    border: 1px solid rgba(53, 40, 29, 0.18);
+    box-shadow: 0 8px 22px rgba(53, 40, 29, 0.12);
 }
 
 .eyebrow,
