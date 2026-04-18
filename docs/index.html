@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ApSwitcher</title>
+    <meta
+        name="description"
+        content="Windows-style window switching on macOS with Cmd+Tab. Switch across real windows, not just apps."
+    >
+    <meta property="og:title" content="ApSwitcher">
+    <meta
+        property="og:description"
+        content="Windows-style window switching on macOS with Cmd+Tab. Switch across real windows, not just apps."
+    >
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/hero-preview.svg">
+    <meta name="theme-color" content="#0f2f2b">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+        rel="stylesheet"
+    >
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="page-shell">
+        <header class="topbar">
+            <a class="brand" href="#top">ApSwitcher</a>
+            <nav class="topnav">
+                <a href="#why">Why</a>
+                <a href="#how">How it works</a>
+                <a href="#install">Install</a>
+                <a href="https://github.com/go-cristian/ap-switch" target="_blank" rel="noreferrer">GitHub</a>
+            </nav>
+        </header>
+
+        <main id="top">
+            <section class="hero">
+                <div class="hero-copy">
+                    <p class="eyebrow">macOS utility</p>
+                    <h1>Windows-style switching for macOS, driven by <code>Cmd+Tab</code>.</h1>
+                    <p class="hero-text">
+                        ApSwitcher replaces app-only switching with real window switching.
+                        You move across the windows you actually have open, keep previews visible,
+                        and land on the exact window you meant to open.
+                    </p>
+                    <div class="hero-actions">
+                        <a
+                            class="button button-primary"
+                            href="https://github.com/go-cristian/ap-switch/releases/latest"
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            Download latest DMG
+                        </a>
+                        <a
+                            class="button button-secondary"
+                            href="https://github.com/go-cristian/ap-switch"
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            View source
+                        </a>
+                    </div>
+                    <ul class="hero-stats" aria-label="Highlights">
+                        <li>
+                            <strong>Cmd+Tab</strong>
+                            <span>Primary shortcut</span>
+                        </li>
+                        <li>
+                            <strong>Window-level</strong>
+                            <span>Not app-level</span>
+                        </li>
+                        <li>
+                            <strong>Notarized DMG</strong>
+                            <span>GitHub Releases</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="hero-visual">
+                    <img src="assets/hero-preview.svg" alt="Illustration of the ApSwitcher overlay">
+                </div>
+            </section>
+
+            <section id="why" class="content-section">
+                <div class="section-heading">
+                    <p class="eyebrow">Why it exists</p>
+                    <h2>macOS app switching is app-centric. ApSwitcher is window-centric.</h2>
+                </div>
+                <div class="card-grid">
+                    <article class="feature-card">
+                        <h3>Switch the way Windows users expect</h3>
+                        <p>
+                            The switcher walks across actual windows. If you have two browser windows
+                            and one terminal, each one gets its own slot.
+                        </p>
+                    </article>
+                    <article class="feature-card">
+                        <h3>Use recent-window order</h3>
+                        <p>
+                            The first jump goes to the previous window, not an arbitrary app.
+                            That keeps fast back-and-forth workflows intact.
+                        </p>
+                    </article>
+                    <article class="feature-card">
+                        <h3>Stay practical about macOS limits</h3>
+                        <p>
+                            Accessibility powers hotkeys and focus. Screen Recording powers previews.
+                            The app stays small and focused instead of pretending those constraints do not exist.
+                        </p>
+                    </article>
+                </div>
+            </section>
+
+            <section id="how" class="content-section accent-panel">
+                <div class="section-heading">
+                    <p class="eyebrow">How it works</p>
+                    <h2>A thin macOS runtime with most of the logic extracted into testable code.</h2>
+                </div>
+                <div class="split-layout">
+                    <div class="stack">
+                        <article class="info-card">
+                            <h3>What you get</h3>
+                            <ul class="clean-list">
+                                <li><code>Cmd+Tab</code> and <code>Cmd+Shift+Tab</code> navigation</li>
+                                <li>Arrow key navigation while the overlay is open</li>
+                                <li>Window previews when Screen Recording is available</li>
+                                <li>Menu bar app with a minimal exit path</li>
+                            </ul>
+                        </article>
+                        <article class="info-card">
+                            <h3>What permissions are required</h3>
+                            <ul class="clean-list">
+                                <li><code>Accessibility</code> for global hotkeys and focus changes</li>
+                                <li><code>Screen Recording</code> for live thumbnails</li>
+                            </ul>
+                        </article>
+                    </div>
+
+                    <article class="info-card code-card">
+                        <h3>Repo structure</h3>
+                        <pre><code>Sources/ApSwitcher/
+  AppDelegate.swift
+  AppSwitcherController.swift
+  GlobalHotkeyMonitor.swift
+  WindowCatalogService.swift
+  WindowPreviewProvider.swift
+  SwitcherSession.swift
+
+Tests/ApSwitcherTests/
+  WindowSwitchingLogicTests.swift
+  WindowUsageTrackerTests.swift
+  SwitcherSessionFactoryTests.swift</code></pre>
+                    </article>
+                </div>
+            </section>
+
+            <section id="install" class="content-section">
+                <div class="section-heading">
+                    <p class="eyebrow">Install</p>
+                    <h2>Download, grant permissions once, and use it.</h2>
+                </div>
+                <div class="install-grid">
+                    <article class="install-step">
+                        <span class="step-number">01</span>
+                        <h3>Download the latest release</h3>
+                        <p>Grab the notarized DMG from GitHub Releases and move the app into Applications.</p>
+                    </article>
+                    <article class="install-step">
+                        <span class="step-number">02</span>
+                        <h3>Approve permissions</h3>
+                        <p>Grant Accessibility first, then Screen Recording if you want thumbnails.</p>
+                    </article>
+                    <article class="install-step">
+                        <span class="step-number">03</span>
+                        <h3>Use Cmd+Tab</h3>
+                        <p>Keep Command pressed to navigate, release it to focus the selected window.</p>
+                    </article>
+                </div>
+                <div class="callout">
+                    <p>
+                        Current public line: <strong>v0.0.4</strong>.
+                        Source code, issues, and release artifacts live in the same repository.
+                    </p>
+                    <div class="callout-actions">
+                        <a
+                            class="text-link"
+                            href="https://github.com/go-cristian/ap-switch/releases/tag/v0.0.4"
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            Release notes
+                        </a>
+                        <a
+                            class="text-link"
+                            href="https://github.com/go-cristian/ap-switch"
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            Repository
+                        </a>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>ApSwitcher is an open source macOS utility focused on practical window switching.</p>
+            <div class="footer-links">
+                <a href="https://github.com/go-cristian/ap-switch" target="_blank" rel="noreferrer">Repo</a>
+                <a href="https://github.com/go-cristian/ap-switch/releases/latest" target="_blank" rel="noreferrer">Latest release</a>
+                <a href="https://github.com/go-cristian/ap-switch/issues" target="_blank" rel="noreferrer">Issues</a>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
