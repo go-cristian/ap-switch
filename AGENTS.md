@@ -10,8 +10,9 @@ Guia operativa para futuras sesiones de Codex sobre `ApSwitcher`.
 
 - App empaquetada como Swift Package, sin proyecto `.xcodeproj`.
 - El bundle de salida vive en `dist/ApSwitcher.app`.
-- El identificador estable es `com.iyubinest.apswitcher`.
+- El identificador estable es `dev.cgomez.apswitcher`.
 - La firma usada desde shell hoy es `Apple Development: iyubinest@hotmail.com (H6Y8QWKATB)`.
+- El team permitido para esta app es `3EUA8SZ453`. No usar certificados de otros teams.
 - `Screen Recording` es requisito efectivo para miniaturas.
 - `Accessibility` es requisito efectivo para hotkey global y focus de ventanas.
 - La arquitectura actual ya separa una capa pura de sesión (`SwitcherSession.swift`) de los adaptadores sensibles de macOS.
@@ -30,6 +31,7 @@ Guia operativa para futuras sesiones de Codex sobre `ApSwitcher`.
 - `Sources/ApSwitcher/SwitcherSession.swift`: puertos/adaptadores y fábrica pura de sesión del switcher.
 - `Sources/ApSwitcher/*PermissionController.swift`: wrappers de permisos.
 - `scripts/build_app.sh`: empaquetado y firma.
+- `scripts/install_app.sh`: instala o reinstala `dist/ApSwitcher.app` en `/Applications` para pruebas manuales limpias.
 - `Tests/ApSwitcherTests`: tests puros; priorizar este enfoque antes de tocar runtime.
 
 ## Archivos sensibles
@@ -108,17 +110,17 @@ Empaquetado:
 ./scripts/build_app.sh
 ```
 
-Abrir la app empaquetada:
+Instalar y abrir la app desde `/Applications`:
 
 ```bash
-open -n /Users/cristian/repos/iyubinest/ApSwitcher/dist/ApSwitcher.app
+./scripts/install_app.sh
 ```
 
 Reiniciar la app:
 
 ```bash
 pkill -x ApSwitcher || true
-open -n /Users/cristian/repos/iyubinest/ApSwitcher/dist/ApSwitcher.app
+open -n /Applications/ApSwitcher.app
 ```
 
 ## Logs útiles
@@ -126,13 +128,13 @@ open -n /Users/cristian/repos/iyubinest/ApSwitcher/dist/ApSwitcher.app
 Logs propios de la app:
 
 ```bash
-/usr/bin/log show --last 10m --style compact --predicate 'subsystem == "com.iyubinest.apswitcher"'
+/usr/bin/log show --last 10m --style compact --predicate 'subsystem == "dev.cgomez.apswitcher"'
 ```
 
 Logs de TCC relevantes:
 
 ```bash
-/usr/bin/log show --last 10m --style compact --predicate 'process == "tccd" AND eventMessage CONTAINS[c] "com.iyubinest.apswitcher"'
+/usr/bin/log show --last 10m --style compact --predicate 'process == "tccd" AND eventMessage CONTAINS[c] "dev.cgomez.apswitcher"'
 ```
 
 ## Troubleshooting conocido
@@ -145,8 +147,8 @@ Señal actual más importante:
 
 Pasos:
 
-1. `tccutil reset ScreenCapture com.iyubinest.apswitcher`
-2. reiniciar la app
+1. `tccutil reset ScreenCapture dev.cgomez.apswitcher`
+2. `./scripts/install_app.sh`
 3. aceptar el prompt de `Screen Recording`
 4. cerrar y abrir de nuevo la app si macOS lo requiere
 
@@ -169,9 +171,10 @@ El ajuste está en `SwitcherOverlayView.swift`, no en `OverlayWindowController.s
 
 ## Restricciones de entorno
 
-- Este directorio no está bajo un repo git activo en esta sesión. No dependas de `git status` o `git diff`.
+- Este directorio sí está bajo git. No reviertas cambios del usuario sin instrucción explícita.
 - `dist/ApSwitcher.app` es output generado; no editar archivos dentro del bundle manualmente.
-- Si tocas firma, permisos o TCC, recompila y vuelve a abrir el bundle desde `dist/ApSwitcher.app`, no el binario interno directo.
+- Para pruebas manuales, usar la copia instalada en `/Applications/ApSwitcher.app`, no abrir el binario interno directo.
+- Si tocas firma, permisos o TCC, recompila y reinstala con `./scripts/install_app.sh`.
 
 ## Checklist de cierre recomendado
 
@@ -180,5 +183,5 @@ Antes de dar por terminada una sesión de cambios:
 1. correr `swift build`
 2. correr `swift test`
 3. si hubo cambios funcionales, correr `./scripts/build_app.sh`
-4. si hubo cambios visuales o de permisos, reiniciar `dist/ApSwitcher.app`
+4. si hubo cambios visuales o de permisos, correr `./scripts/install_app.sh`
 5. si hubo problemas con miniaturas, revisar logs antes de seguir cambiando código

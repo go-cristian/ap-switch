@@ -1,5 +1,5 @@
 import AppKit
-import ApplicationServices
+@preconcurrency import ApplicationServices
 import Combine
 
 @MainActor
@@ -8,6 +8,18 @@ final class AccessibilityPermissionController: ObservableObject {
 
     func refreshStatus() {
         isTrusted = AXIsProcessTrusted()
+    }
+
+    @discardableResult
+    func requestIfNeeded() -> Bool {
+        refreshStatus()
+        guard !isTrusted else {
+            return true
+        }
+
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+        isTrusted = AXIsProcessTrustedWithOptions(options)
+        return isTrusted
     }
 
     func openSettings() {

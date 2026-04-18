@@ -52,6 +52,8 @@ final class SwitcherOverlayModel: ObservableObject {
 final class AppSwitcherController {
     let overlayModel = SwitcherOverlayModel()
 
+    private let previewRefreshInterval: TimeInterval = 5
+    private let previewTargetSize = CGSize(width: 444, height: 252)
     private let catalogService: any WindowCatalogProviding
     private let usageTracker: WindowUsageTracker
     private let previewLoader: (any WindowPreviewLoading)?
@@ -59,6 +61,7 @@ final class AppSwitcherController {
     private var snapshotWindowIDs: [WindowIdentity: CGWindowID] = [:]
     private var previewCache: [CGWindowID: NSImage] = [:]
     private var previewTask: Task<Void, Never>?
+    private var previewRefreshTimer: Timer?
     private var overlayFailsafeTimer: Timer?
     private let overlayPresenterFactory: @MainActor (SwitcherOverlayModel) -> any OverlayPresenting
     private lazy var overlayPresenter = overlayPresenterFactory(overlayModel)
@@ -80,6 +83,10 @@ final class AppSwitcherController {
         self.usageTracker = usageTracker
         self.previewLoader = previewLoader
         self.overlayPresenterFactory = overlayPresenterFactory
+
+        if previewLoader != nil {
+            startPreviewRefreshTimer()
+        }
     }
 
     var isVisible: Bool {
@@ -210,6 +217,17 @@ final class AppSwitcherController {
         snapshotWindowIDs.removeAll()
     }
 
+    private func startPreviewRefreshTimer() {
+        previewRefreshTimer?.invalidate()
+        previewRefreshTimer = Timer.scheduledTimer(
+            timeInterval: previewRefreshInterval,
+            target: self,
+            selector: #selector(handlePreviewRefreshTimer),
+            userInfo: nil,
+            repeats: true
+        )
+    }
+
     private func resetOverlayFailsafeTimer() {
         overlayFailsafeTimer?.invalidate()
         overlayFailsafeTimer = Timer.scheduledTimer(
@@ -226,9 +244,53 @@ final class AppSwitcherController {
         hideSwitcher()
     }
 
+    @objc
+    private func handlePreviewRefreshTimer() {
+        refreshPreviewsInBackground()
+    }
+
     private func loadPreviewsIfNeeded(
         for items: [WindowCatalogItem],
         screenCaptureAccessGranted: Bool
+    ) {
+        requestPreviewLoad(
+            for: items.compactMap(\.snapshotWindowID),
+            screenCaptureAccessGranted: screenCaptureAccessGranted,
+            forceRefresh: false,
+            updateVisibleOverlay: true
+        )
+    }
+
+    private func refreshPreviewsInBackground() {
+        let catalog = catalogService.currentCatalog()
+        guard catalog.screenCaptureAccessGranted else {
+            AppLogger.preview.info("refreshPreviewsInBackground skipped because Screen Recording is not granted")
+            return
+        }
+
+        if overlayModel.isVisible {
+            requestPreviewLoad(
+                for: Array(snapshotWindowIDs.values),
+                screenCaptureAccessGranted: catalog.screenCaptureAccessGranted,
+                forceRefresh: true,
+                updateVisibleOverlay: true
+            )
+            return
+        }
+
+        requestPreviewLoad(
+            for: catalog.items.compactMap(\.snapshotWindowID),
+            screenCaptureAccessGranted: catalog.screenCaptureAccessGranted,
+            forceRefresh: true,
+            updateVisibleOverlay: false
+        )
+    }
+
+    private func requestPreviewLoad(
+        for windowIDs: [CGWindowID],
+        screenCaptureAccessGranted: Bool,
+        forceRefresh: Bool,
+        updateVisibleOverlay: Bool
     ) {
         previewTask?.cancel()
         previewTask = nil
@@ -240,29 +302,38 @@ final class AppSwitcherController {
 
         guard #available(macOS 14.0, *) else {
             AppLogger.preview.error("loadPreviewsIfNeeded skipped because macOS 14 is required")
-            overlayModel.footerMessage = "Las miniaturas requieren macOS 14 o superior."
+            if updateVisibleOverlay {
+                overlayModel.footerMessage = "Las miniaturas requieren macOS 14 o superior."
+            }
             return
         }
 
         guard let previewLoader else {
             AppLogger.preview.error("loadPreviewsIfNeeded skipped because no preview loader is configured")
-            overlayModel.footerMessage = SwitcherFooterMessageResolver.missingPreviews
+            if updateVisibleOverlay {
+                overlayModel.footerMessage = SwitcherFooterMessageResolver.missingPreviews
+            }
             return
         }
 
-        let uncachedWindowIDs = items.compactMap(\.snapshotWindowID).filter { self.previewCache[$0] == nil }
+        let requestedWindowIDs = deduplicatedWindowIDs(from: windowIDs)
+        let uncachedWindowIDs = forceRefresh
+            ? requestedWindowIDs
+            : requestedWindowIDs.filter { self.previewCache[$0] == nil }
         AppLogger.preview.info(
-            "loadPreviewsIfNeeded requested=\(items.count, privacy: .public) uncached=\(uncachedWindowIDs.count, privacy: .public) cached=\(self.previewCache.count, privacy: .public)"
+            "requestPreviewLoad requested=\(requestedWindowIDs.count, privacy: .public) loading=\(uncachedWindowIDs.count, privacy: .public) cached=\(self.previewCache.count, privacy: .public) forceRefresh=\(forceRefresh, privacy: .public)"
         )
         if uncachedWindowIDs.isEmpty {
-            if overlayModel.windows.contains(where: { $0.preview != nil }) {
-                overlayModel.footerMessage = SwitcherFooterMessageResolver.normalHint
+            if updateVisibleOverlay {
+                applyCachedPreviewsToOverlay(screenCaptureAccessGranted: true)
             }
-            AppLogger.preview.info("loadPreviewsIfNeeded found no uncached windows")
+            AppLogger.preview.info("requestPreviewLoad found no windows to load")
             return
         }
 
-        overlayModel.footerMessage = "Cargando miniaturas..."
+        if updateVisibleOverlay {
+            overlayModel.footerMessage = "Cargando miniaturas..."
+        }
         let previewLoaderRef = previewLoader
 
         previewTask = Task { [weak self] in
@@ -274,7 +345,7 @@ final class AppSwitcherController {
             do {
                 images = try await previewLoaderRef.loadImages(
                     for: uncachedWindowIDs,
-                    targetSize: CGSize(width: 444, height: 252)
+                    targetSize: previewTargetSize
                 )
             } catch {
                 guard !Task.isCancelled else {
@@ -283,7 +354,7 @@ final class AppSwitcherController {
                 }
 
                 AppLogger.preview.error("WindowPreviewProvider failed: \(String(describing: error), privacy: .public)")
-                if overlayModel.isVisible {
+                if updateVisibleOverlay && overlayModel.isVisible {
                     overlayModel.footerMessage = SwitcherFooterMessageResolver.missingPreviews
                 }
                 return
@@ -301,33 +372,42 @@ final class AppSwitcherController {
                 previewCache[windowID] = image
             }
 
-            guard overlayModel.isVisible else {
+            guard updateVisibleOverlay, overlayModel.isVisible else {
                 return
             }
 
-            overlayModel.windows = overlayModel.windows.map { window in
-                guard let snapshotWindowID = snapshotWindowIDs[window.id],
-                      let image = previewCache[snapshotWindowID] else {
-                    return window
-                }
+            applyCachedPreviewsToOverlay(screenCaptureAccessGranted: true)
+        }
+    }
 
-                return SwitcherWindow(
-                    id: window.id,
-                    title: window.title,
-                    appName: window.appName,
-                    icon: window.icon,
-                    preview: image,
-                    isMinimized: window.isMinimized
-                )
+    private func applyCachedPreviewsToOverlay(screenCaptureAccessGranted: Bool) {
+        overlayModel.windows = overlayModel.windows.map { window in
+            guard let snapshotWindowID = snapshotWindowIDs[window.id],
+                  let image = previewCache[snapshotWindowID] else {
+                return window
             }
 
-            overlayModel.footerMessage = SwitcherFooterMessageResolver.resolve(
-                screenCaptureAccessGranted: true,
-                windows: overlayModel.windows
-            )
-            AppLogger.preview.info(
-                "overlay updated previewsPresent=\(self.overlayModel.windows.contains(where: { $0.preview != nil }), privacy: .public)"
+            return SwitcherWindow(
+                id: window.id,
+                title: window.title,
+                appName: window.appName,
+                icon: window.icon,
+                preview: image,
+                isMinimized: window.isMinimized
             )
         }
+
+        overlayModel.footerMessage = SwitcherFooterMessageResolver.resolve(
+            screenCaptureAccessGranted: screenCaptureAccessGranted,
+            windows: overlayModel.windows
+        )
+        AppLogger.preview.info(
+            "overlay updated previewsPresent=\(self.overlayModel.windows.contains(where: { $0.preview != nil }), privacy: .public)"
+        )
+    }
+
+    private func deduplicatedWindowIDs(from windowIDs: [CGWindowID]) -> [CGWindowID] {
+        var seen: Set<CGWindowID> = []
+        return windowIDs.filter { seen.insert($0).inserted }
     }
 }

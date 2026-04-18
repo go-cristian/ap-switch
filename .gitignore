@@ -2,3 +2,6 @@
 dist/
 .signing/
 .DS_Store
+.env
+/Certificates.p12
+/AuthKey_*.p8

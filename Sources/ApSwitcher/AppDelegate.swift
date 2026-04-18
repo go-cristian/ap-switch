@@ -11,8 +11,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var switcherController: AppSwitcherController?
     private var statusBarController: StatusBarController?
     private var permissionPollTimer: Timer?
-    private var hasShownAccessibilityPermissionAlert = false
-    private var hasShownScreenRecordingPermissionAlert = false
+    private var hasShownAccessibilityPrimer = false
+    private var hasShownAccessibilitySettingsHelp = false
+    private var hasShownScreenRecordingPrimer = false
+    private var hasRequestedAccessibilitySystemPrompt = false
+    private var hasRequestedScreenRecordingSystemPrompt = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let usageTracker = WindowUsageTracker { [weak self] in
@@ -39,7 +42,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 }
 
                 if !self.accessibilityPermissionController.isTrusted {
-                    self.presentAccessibilityPermissionHelpIfNeeded()
+                    if self.hasRequestedAccessibilitySystemPrompt || self.hasShownAccessibilityPrimer {
+                        self.presentAccessibilityPermissionHelpIfNeeded()
+                    } else {
+                        self.presentAccessibilityPermissionPrimerIfNeeded()
+                    }
                     return
                 }
 
@@ -74,19 +81,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         refreshRuntimeState()
 
-        if !accessibilityPermissionController.isTrusted {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                Task { @MainActor [weak self] in
-                    self?.presentAccessibilityPermissionHelpIfNeeded()
-                }
-            }
-        }
-
-        if !screenRecordingPermissionController.isGranted {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-                Task { @MainActor [weak self] in
-                    self?.requestScreenRecordingAccessIfNeeded()
-                }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            Task { @MainActor [weak self] in
+                self?.presentNextPermissionPrimerIfNeeded()
             }
         }
 
@@ -108,6 +105,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc
     private func handlePermissionPoll() {
         refreshRuntimeState()
+        presentNextPermissionPrimerIfNeeded()
     }
 
     private func refreshRuntimeState() {
@@ -115,28 +113,66 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         screenRecordingPermissionController.refreshStatus()
 
         if accessibilityPermissionController.isTrusted {
-            hasShownAccessibilityPermissionAlert = false
+            hasRequestedAccessibilitySystemPrompt = false
+            hasShownAccessibilitySettingsHelp = false
             hotkeyMonitor.start()
             usageTracker?.start()
         } else {
             hotkeyMonitor.stop()
             usageTracker?.stop()
         }
+
+        if screenRecordingPermissionController.isGranted {
+            hasRequestedScreenRecordingSystemPrompt = false
+        }
     }
 
-    private func presentAccessibilityPermissionHelpIfNeeded() {
-        accessibilityPermissionController.refreshStatus()
-        guard !accessibilityPermissionController.isTrusted, !hasShownAccessibilityPermissionAlert else {
+    private func presentNextPermissionPrimerIfNeeded() {
+        if !accessibilityPermissionController.isTrusted {
+            presentAccessibilityPermissionPrimerIfNeeded()
             return
         }
 
-        hasShownAccessibilityPermissionAlert = true
+        if !screenRecordingPermissionController.isGranted {
+            presentScreenRecordingPermissionPrimerIfNeeded()
+        }
+    }
+
+    private func presentAccessibilityPermissionPrimerIfNeeded() {
+        accessibilityPermissionController.refreshStatus()
+        guard !accessibilityPermissionController.isTrusted, !hasShownAccessibilityPrimer else {
+            return
+        }
+
+        hasShownAccessibilityPrimer = true
         NSApplication.shared.activate(ignoringOtherApps: true)
 
         let alert = NSAlert()
         alert.alertStyle = .warning
         alert.messageText = "ApSwitcher necesita permiso de Accessibility"
-        alert.informativeText = "Sin ese permiso, Option+Tab no puede capturar teclado global ni enfocar ventanas."
+        alert.informativeText = "Presiona Continuar y macOS mostrara el permiso del sistema. Sin ese permiso, Option+Tab no puede capturar teclado global ni enfocar ventanas."
+        alert.addButton(withTitle: "Continuar")
+        alert.addButton(withTitle: "Mas tarde")
+
+        let response = alert.runModal()
+        if response == .alertFirstButtonReturn {
+            requestAccessibilityAccessIfNeeded()
+        }
+    }
+
+    private func presentAccessibilityPermissionHelpIfNeeded() {
+        accessibilityPermissionController.refreshStatus()
+        guard !accessibilityPermissionController.isTrusted, !hasShownAccessibilitySettingsHelp else {
+            return
+        }
+
+        hasShownAccessibilitySettingsHelp = true
+        NSApplication.shared.activate(ignoringOtherApps: true)
+
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = "ApSwitcher necesita permiso de Accessibility"
+        alert.informativeText = "El prompt del sistema ya fue mostrado antes. Si no aceptaste el permiso, ahora debes habilitarlo manualmente en Ajustes."
         alert.addButton(withTitle: "Abrir ajustes")
         alert.addButton(withTitle: "Cerrar")
 
@@ -146,43 +182,50 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    private func requestAccessibilityAccessIfNeeded() {
+        accessibilityPermissionController.refreshStatus()
+        guard !accessibilityPermissionController.isTrusted else {
+            hasRequestedAccessibilitySystemPrompt = false
+            hasShownAccessibilitySettingsHelp = false
+            return
+        }
+
+        hasRequestedAccessibilitySystemPrompt = true
+        let granted = accessibilityPermissionController.requestIfNeeded()
+        AppLogger.switcher.info("requestAccessibilityAccessIfNeeded granted=\(granted, privacy: .public)")
+    }
+
     private func requestScreenRecordingAccessIfNeeded() {
         screenRecordingPermissionController.refreshStatus()
         guard !screenRecordingPermissionController.isGranted else {
-            hasShownScreenRecordingPermissionAlert = false
+            hasRequestedScreenRecordingSystemPrompt = false
             return
         }
 
+        hasRequestedScreenRecordingSystemPrompt = true
         let granted = screenRecordingPermissionController.requestIfNeeded()
         AppLogger.preview.info("requestScreenRecordingAccessIfNeeded granted=\(granted, privacy: .public)")
-
-        guard !granted else {
-            hasShownScreenRecordingPermissionAlert = false
-            return
-        }
-
-        presentScreenRecordingPermissionHelpIfNeeded()
     }
 
-    private func presentScreenRecordingPermissionHelpIfNeeded() {
+    private func presentScreenRecordingPermissionPrimerIfNeeded() {
         screenRecordingPermissionController.refreshStatus()
-        guard !screenRecordingPermissionController.isGranted, !hasShownScreenRecordingPermissionAlert else {
+        guard !screenRecordingPermissionController.isGranted, !hasShownScreenRecordingPrimer else {
             return
         }
 
-        hasShownScreenRecordingPermissionAlert = true
+        hasShownScreenRecordingPrimer = true
         NSApplication.shared.activate(ignoringOtherApps: true)
 
         let alert = NSAlert()
         alert.alertStyle = .warning
         alert.messageText = "ApSwitcher necesita permiso de Screen Recording"
-        alert.informativeText = "Sin ese permiso, macOS no permite generar miniaturas de otras ventanas. Si lo activas ahora, reinicia la app despues."
-        alert.addButton(withTitle: "Abrir ajustes")
-        alert.addButton(withTitle: "Cerrar")
+        alert.informativeText = "Presiona Continuar y macOS mostrara el permiso del sistema. Sin ese permiso, no se pueden generar miniaturas de otras ventanas."
+        alert.addButton(withTitle: "Continuar")
+        alert.addButton(withTitle: "Mas tarde")
 
         let response = alert.runModal()
         if response == .alertFirstButtonReturn {
-            screenRecordingPermissionController.openSettings()
+            requestScreenRecordingAccessIfNeeded()
         }
     }
 }

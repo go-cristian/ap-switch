@@ -66,13 +66,13 @@ Si no salen miniaturas:
 3. revisa el log:
 
 ```bash
-/usr/bin/log show --last 10m --style compact --predicate 'subsystem == "com.iyubinest.apswitcher"'
+/usr/bin/log show --last 10m --style compact --predicate 'subsystem == "dev.cgomez.apswitcher"'
 ```
 
 Si el log dice `Screen Recording is not granted`, resetea TCC y vuelve a autorizar:
 
 ```bash
-tccutil reset ScreenCapture com.iyubinest.apswitcher
+tccutil reset ScreenCapture dev.cgomez.apswitcher
 ```
 
 Luego reinicia la app y vuelve a aceptar `Screen Recording`.
@@ -89,8 +89,37 @@ Esto genera:
 dist/ApSwitcher.app
 ```
 
-Luego puedes abrirla con:
+Instalación recomendada para pruebas manuales:
 
 ```bash
-open dist/ApSwitcher.app
+./scripts/install_app.sh
+```
+
+Esto reinstala la copia empaquetada en:
+
+```text
+/Applications/ApSwitcher.app
+```
+
+Y la vuelve a abrir desde esa ubicación estable, que se comporta mejor con TCC y Launch Services.
+
+Si necesitas forzar una prueba limpia de permisos:
+
+```bash
+./scripts/install_app.sh --reset-permissions
+```
+
+## Release `.dmg`
+
+Hay automatización para publicar un `.dmg` instalable en GitHub cuando haces push de un tag `vX.Y.Z`.
+Usar solo certificados del team `3EUA8SZ453`.
+
+Documentación:
+
+- [RELEASE.md](/Users/cristian/repos/iyubinest/ApSwitcher/RELEASE.md)
+
+Script de release:
+
+```bash
+./scripts/build_release_dmg.sh
 ```

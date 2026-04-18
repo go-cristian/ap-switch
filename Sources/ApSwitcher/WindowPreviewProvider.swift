@@ -23,20 +23,34 @@ enum WindowPreviewProvider {
 
         var images: [CGWindowID: NSImage] = [:]
         var missingWindowIDs: [CGWindowID] = []
+        var failedWindowIDs: [CGWindowID] = []
         for windowID in windowIDs {
             guard let window = windowsByID[windowID] else {
                 missingWindowIDs.append(windowID)
                 continue
             }
 
-            if let image = try await captureImage(for: window, targetSize: targetSize) {
-                images[windowID] = image
+            do {
+                if let image = try await captureImage(for: window, targetSize: targetSize) {
+                    images[windowID] = image
+                }
+            } catch {
+                failedWindowIDs.append(windowID)
+                AppLogger.preview.error(
+                    "WindowPreviewProvider could not capture windowID=\(windowID, privacy: .public) error=\(String(describing: error), privacy: .public)"
+                )
             }
         }
 
         if !missingWindowIDs.isEmpty {
             AppLogger.preview.error(
                 "WindowPreviewProvider could not match \(missingWindowIDs.count, privacy: .public) requested windowIDs in SCShareableContent"
+            )
+        }
+
+        if !failedWindowIDs.isEmpty {
+            AppLogger.preview.error(
+                "WindowPreviewProvider failed to capture \(failedWindowIDs.count, privacy: .public) windows but will keep successful previews"
             )
         }
 
@@ -68,9 +82,6 @@ enum WindowPreviewProvider {
                     return
                 }
 
-                AppLogger.preview.error(
-                    "captureImage failed windowID=\(windowID, privacy: .public) error=\(String(describing: error), privacy: .public)"
-                )
                 continuation.resume(throwing: error ?? PreviewError.missingImage)
             }
         }
