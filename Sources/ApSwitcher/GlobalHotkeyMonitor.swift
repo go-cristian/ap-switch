@@ -1,8 +1,8 @@
 import AppKit
 
 final class GlobalHotkeyMonitor {
-    var onOptionTab: ((Bool) -> Void)?
-    var onOptionReleased: (() -> Void)?
+    var onCommandTab: ((Bool) -> Void)?
+    var onCommandReleased: (() -> Void)?
     var onEscape: (() -> Void)?
     var onReturn: (() -> Void)?
     var onArrowNavigation: ((Bool) -> Void)?
@@ -12,7 +12,7 @@ final class GlobalHotkeyMonitor {
     private(set) var isRunning = false
     private var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
-    private var optionIsPressed = false
+    private var commandIsPressed = false
 
     func start() {
         guard !isRunning else {
@@ -22,7 +22,7 @@ final class GlobalHotkeyMonitor {
         let mask = (1 << CGEventType.keyDown.rawValue) | (1 << CGEventType.flagsChanged.rawValue)
 
         guard let eventTap = CGEvent.tapCreate(
-            tap: .cgSessionEventTap,
+            tap: .cghidEventTap,
             place: .headInsertEventTap,
             options: .defaultTap,
             eventsOfInterest: CGEventMask(mask),
@@ -42,7 +42,7 @@ final class GlobalHotkeyMonitor {
         let runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0)
         self.eventTap = eventTap
         self.runLoopSource = runLoopSource
-        optionIsPressed = false
+        commandIsPressed = false
 
         CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
         CGEvent.tapEnable(tap: eventTap, enable: true)
@@ -60,7 +60,7 @@ final class GlobalHotkeyMonitor {
 
         eventTap = nil
         runLoopSource = nil
-        optionIsPressed = false
+        commandIsPressed = false
         isRunning = false
     }
 
@@ -95,8 +95,8 @@ final class GlobalHotkeyMonitor {
             return nil
         }
 
-        if keyCode == 48 && flags.contains(NSEvent.ModifierFlags.option) {
-            onOptionTab?(flags.contains(NSEvent.ModifierFlags.shift))
+        if keyCode == 48 && flags.contains(NSEvent.ModifierFlags.command) {
+            onCommandTab?(flags.contains(NSEvent.ModifierFlags.shift))
             return nil
         }
 
@@ -125,12 +125,12 @@ final class GlobalHotkeyMonitor {
 
     private func handleFlagsChanged(_ event: CGEvent) {
         let flags = NSEvent.ModifierFlags(rawValue: UInt(event.flags.rawValue))
-        let optionPressedNow = flags.contains(NSEvent.ModifierFlags.option)
+        let commandPressedNow = flags.contains(NSEvent.ModifierFlags.command)
 
-        if optionIsPressed && !optionPressedNow {
-            onOptionReleased?()
+        if commandIsPressed && !commandPressedNow {
+            onCommandReleased?()
         }
 
-        optionIsPressed = optionPressedNow
+        commandIsPressed = commandPressedNow
     }
 }

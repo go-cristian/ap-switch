@@ -53,7 +53,7 @@ struct SwitcherSession {
 
 @MainActor
 enum SwitcherFooterMessageResolver {
-    static let normalHint = "Option+Tab y flechas recorren ventanas. Suelta Option o presiona Enter para activar."
+    static let normalHint = "Cmd+Tab y flechas recorren ventanas. Suelta Command o presiona Enter para activar."
     static let missingScreenRecording = "Activa Screen Recording para ApSwitcher y reinicia la app para ver miniaturas."
     static let missingPreviews = "Screen Recording esta activo, pero macOS no entrego miniaturas en esta sesion. Reinicia la app."
 
