@@ -1,22 +1,22 @@
 # ApSwitcher
 
-App ligera para macOS que replica el flujo de `Alt+Tab` de Windows con `Option+Tab`, pero cambiando entre ventanas individuales en vez de apps.
+App ligera para macOS que replica el flujo de `Alt+Tab` de Windows con `Cmd+Tab`, pero cambiando entre ventanas individuales en vez de apps.
 
 ## Qué hace
 
 - Corre como app de barra de menú.
-- Escucha `Option+Tab` globalmente.
+- Escucha `Cmd+Tab` globalmente.
 - Muestra un overlay centrado con todas las ventanas top-level detectables.
 - Usa orden reciente de uso por ventana para que el primer salto vaya a la ventana anterior.
-- Activa la ventana seleccionada al soltar `Option`.
-- Soporta `Option+Shift+Tab` para navegar en reversa.
+- Activa la ventana seleccionada al soltar `Command`.
+- Soporta `Cmd+Shift+Tab` para navegar en reversa.
 - Soporta flechas izquierda/derecha y arriba/abajo para mover la selección mientras el overlay está abierto.
 - Intenta mostrar miniaturas reales con `ScreenCaptureKit` cuando `Screen Recording` está concedido.
 - Permite salir desde el icono de barra de menú o con `Control+Option+Q`.
 
-## Por qué no `Command+Tab`
+## Notas sobre `Cmd+Tab`
 
-Apple documenta `Command+Tab` como un atajo reservado del sistema para moverse entre apps abiertas y explícitamente indica que no se debe sobrescribir. Para un comportamiento confiable, la app usa `Option+Tab`.
+Esta versión usa `Cmd+Tab` como atajo principal. Eso no es una ruta oficialmente soportada por Apple, así que puede ser más frágil frente a cambios de macOS que el resto de la app.
 
 Fuentes oficiales:
 
@@ -62,7 +62,7 @@ La ruta sensible de runtime de macOS (`Accessibility`, `Screen Recording`, `AXUI
 Si no salen miniaturas:
 
 1. abre la app
-2. prueba `Option+Tab`
+2. prueba `Cmd+Tab`
 3. revisa el log:
 
 ```bash

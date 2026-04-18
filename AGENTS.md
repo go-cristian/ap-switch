@@ -4,7 +4,7 @@ Guia operativa para futuras sesiones de Codex sobre `ApSwitcher`.
 
 ## Objetivo del proyecto
 
-`ApSwitcher` es una app ligera de macOS que replica el flujo de `Alt+Tab` de Windows usando `Option+Tab`, pero cambia entre ventanas individuales y no entre apps.
+`ApSwitcher` es una app ligera de macOS que replica el flujo de `Alt+Tab` de Windows usando `Cmd+Tab`, pero cambia entre ventanas individuales y no entre apps.
 
 ## Estado actual
 
@@ -23,7 +23,7 @@ Guia operativa para futuras sesiones de Codex sobre `ApSwitcher`.
 - `Sources/ApSwitcher/AppSwitcherController.swift`: flujo principal del switcher, overlay, selección, previews, failsafe.
 - `Sources/ApSwitcher/WindowCatalogService.swift`: catálogo de ventanas vía AX + CGWindowList.
 - `Sources/ApSwitcher/WindowPreviewProvider.swift`: miniaturas con `ScreenCaptureKit`.
-- `Sources/ApSwitcher/GlobalHotkeyMonitor.swift`: `CGEventTap` para `Option+Tab`, flechas, escape, enter.
+- `Sources/ApSwitcher/GlobalHotkeyMonitor.swift`: `CGEventTap` para `Cmd+Tab`, flechas, escape, enter.
 - `Sources/ApSwitcher/OverlayWindowController.swift`: panel flotante y cálculo de tamaño.
 - `Sources/ApSwitcher/SwitcherOverlayView.swift`: UI SwiftUI del overlay.
 - `Sources/ApSwitcher/WindowUsageTracker.swift`: MRU por ventana mediante polling del focused window.

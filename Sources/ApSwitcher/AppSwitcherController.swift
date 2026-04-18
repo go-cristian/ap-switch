@@ -33,7 +33,7 @@ final class SwitcherOverlayModel: ObservableObject {
     @Published var selectedIndex = 0
     @Published var isVisible = false
     @Published var stats = SwitcherSpaceStats.empty
-    @Published var footerMessage = "Option+Tab o Cmd+Tab experimental recorren ventanas. Suelta el modificador o presiona Enter para activar."
+    @Published var footerMessage = "Cmd+Tab y flechas recorren ventanas. Suelta Command o presiona Enter para activar."
 
     var selectedWindow: SwitcherWindow? {
         guard windows.indices.contains(selectedIndex) else {
@@ -93,7 +93,7 @@ final class AppSwitcherController {
         overlayModel.isVisible
     }
 
-    func handleOptionTab(backwards: Bool) {
+    func handleCommandTab(backwards: Bool) {
         if overlayModel.isVisible {
             advanceSelection(movingForward: !backwards)
             return
@@ -102,7 +102,7 @@ final class AppSwitcherController {
         showSwitcher(selectingBackward: backwards)
     }
 
-    func handleOptionReleased() {
+    func handleCommandReleased() {
         guard overlayModel.isVisible else {
             return
         }

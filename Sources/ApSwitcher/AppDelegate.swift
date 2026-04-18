@@ -35,24 +35,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 switcherController?.isVisible ?? false
             }
         }
-        hotkeyMonitor.onOptionTab = { [weak self] backwards in
-            Task { @MainActor [weak self] in
-                self?.handleSwitcherHotkey(backwards: backwards)
-            }
-        }
         hotkeyMonitor.onCommandTab = { [weak self] backwards in
             Task { @MainActor [weak self] in
                 self?.handleSwitcherHotkey(backwards: backwards)
             }
         }
-        hotkeyMonitor.onOptionReleased = { [weak switcherController] in
-            Task { @MainActor in
-                switcherController?.handleOptionReleased()
-            }
-        }
         hotkeyMonitor.onCommandReleased = { [weak switcherController] in
             Task { @MainActor in
-                switcherController?.handleOptionReleased()
+                switcherController?.handleCommandReleased()
             }
         }
         hotkeyMonitor.onEscape = { [weak switcherController] in
@@ -147,7 +137,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let alert = NSAlert()
         alert.alertStyle = .warning
         alert.messageText = "ApSwitcher necesita permiso de Accessibility"
-        alert.informativeText = "Presiona Continuar y macOS mostrara el permiso del sistema. Sin ese permiso, ApSwitcher no puede capturar Option+Tab ni el modo experimental de Command+Tab, y tampoco enfocar ventanas."
+        alert.informativeText = "Presiona Continuar y macOS mostrara el permiso del sistema. Sin ese permiso, ApSwitcher no puede capturar Cmd+Tab ni enfocar ventanas."
         alert.addButton(withTitle: "Continuar")
         alert.addButton(withTitle: "Mas tarde")
 
@@ -236,6 +226,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        switcherController?.handleOptionTab(backwards: backwards)
+        switcherController?.handleCommandTab(backwards: backwards)
     }
 }
