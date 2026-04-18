@@ -15,11 +15,11 @@
     >
     <meta property="og:type" content="website">
     <meta property="og:image" content="assets/apswitcher-demo.gif">
-    <meta name="theme-color" content="#122926">
+    <meta name="theme-color" content="#11211f">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Sora:wght@500;700;800&display=swap"
         rel="stylesheet"
     >
     <link rel="stylesheet" href="styles.css">
@@ -38,10 +38,10 @@
         <main class="content">
             <section class="hero">
                 <p class="eyebrow">macOS utility</p>
-                <h1>Cmd+Tab for real windows.</h1>
+                <h1>Window switching that feels closer to Windows.</h1>
                 <p class="lead">
-                    ApSwitcher makes macOS switch across windows instead of only across apps.
-                    It keeps the workflow closer to Windows while staying small, direct, and easy to install.
+                    ApSwitcher uses <code>Cmd+Tab</code> to move across real windows instead of only switching apps.
+                    It stays focused on one job: faster navigation between the windows you actually have open.
                 </p>
 
                 <div class="actions">
@@ -63,25 +63,26 @@
                     </a>
                 </div>
 
-                <ul class="meta-list">
-                    <li>Switches windows, not app groups</li>
-                    <li><code>Cmd+Shift+Tab</code> and arrow navigation supported</li>
-                    <li>Notarized DMG releases on GitHub</li>
+                <ul class="signal-strip">
+                    <li>Window-level switching</li>
+                    <li><code>Cmd+Shift+Tab</code> + arrow navigation</li>
+                    <li>Notarized releases on GitHub</li>
                 </ul>
             </section>
 
-            <section class="demo-section" aria-labelledby="demo-title">
-                <div class="section-header">
+            <section class="demo-panel" aria-labelledby="demo-title">
+                <div class="panel-header">
                     <div>
-                        <p class="section-kicker">Demo</p>
-                        <h2 id="demo-title">What it actually looks like</h2>
+                        <p class="section-label">Demo</p>
+                        <h2 id="demo-title">The current behavior</h2>
                     </div>
-                    <p class="section-copy">
-                        The current app flow in use: centered switcher, per-window selection, and fast cycling between real windows.
+                    <p class="panel-copy">
+                        A real capture of the app in use: centered overlay, per-window targets,
+                        and quick cycling between windows.
                     </p>
                 </div>
 
-                <div class="demo-card">
+                <div class="demo-frame">
                     <img
                         class="demo-gif"
                         src="assets/apswitcher-demo.gif"
@@ -90,28 +91,28 @@
                 </div>
             </section>
 
-            <section class="details-grid">
-                <article class="detail-card">
-                    <p class="card-kicker">Why it matters</p>
-                    <h3>Every window gets its own slot</h3>
+            <section class="info-grid">
+                <article class="info-card">
+                    <p class="card-label">Why it is different</p>
+                    <h3>Windows are first-class targets.</h3>
                     <p>
-                        Two browser windows and one terminal appear as three targets.
-                        The switcher stays tied to what is really open.
+                        If you have two browser windows and one terminal, you get three selectable items.
+                        The switcher stays tied to the actual workspace.
                     </p>
                 </article>
 
-                <article class="detail-card">
-                    <p class="card-kicker">Install</p>
-                    <h3>Simple setup</h3>
+                <article class="info-card">
+                    <p class="card-label">Install</p>
+                    <h3>Small setup, then it stays out of the way.</h3>
                     <p>
                         Download the DMG, move the app into Applications, approve Accessibility,
-                        and enable Screen Recording if you want thumbnails.
+                        and optionally enable Screen Recording for thumbnails.
                     </p>
                 </article>
 
-                <article class="detail-card">
-                    <p class="card-kicker">Links</p>
-                    <h3>Source and releases</h3>
+                <article class="info-card">
+                    <p class="card-label">Links</p>
+                    <h3>Source, release notes, issues.</h3>
                     <div class="link-list">
                         <a href="https://github.com/go-cristian/ap-switch/releases/tag/v0.0.4" target="_blank" rel="noreferrer">Release notes</a>
                         <a href="https://github.com/go-cristian/ap-switch" target="_blank" rel="noreferrer">Repository</a>

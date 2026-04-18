@@ -1,13 +1,12 @@
 :root {
-    --bg: #f4efe8;
-    --surface: #fffaf4;
-    --surface-alt: #f8f2ea;
-    --ink: #122926;
-    --ink-soft: #5a6966;
-    --line: rgba(18, 41, 38, 0.1);
-    --accent: #183d38;
-    --accent-soft: #dfe8e4;
-    --shadow: 0 18px 40px rgba(18, 41, 38, 0.08);
+    --bg: #f7f5f1;
+    --surface: #ffffff;
+    --surface-soft: #f4f2ec;
+    --ink: #11211f;
+    --ink-soft: #5f6f6b;
+    --line: rgba(17, 33, 31, 0.11);
+    --accent: #164b44;
+    --accent-soft: #dceae6;
 }
 
 * {
@@ -20,10 +19,13 @@ html {
 
 body {
     margin: 0;
-    font-family: "IBM Plex Sans", sans-serif;
+    font-family: "Instrument Sans", sans-serif;
     color: var(--ink);
     background:
-        linear-gradient(180deg, #f7f3ec 0%, var(--bg) 100%);
+        linear-gradient(rgba(17, 33, 31, 0.028) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(17, 33, 31, 0.028) 1px, transparent 1px),
+        var(--bg);
+    background-size: 32px 32px, 32px 32px, auto;
 }
 
 img {
@@ -42,7 +44,7 @@ code {
 }
 
 .page-shell {
-    width: min(1000px, calc(100% - 32px));
+    width: min(1100px, calc(100% - 32px));
     margin: 0 auto;
     padding: 28px 0 56px;
 }
@@ -52,20 +54,20 @@ code {
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    padding-bottom: 28px;
+    padding-bottom: 34px;
 }
 
 .brand,
 .hero h1,
-.section-header h2,
-.detail-card h3 {
-    font-family: "Space Grotesk", sans-serif;
-    letter-spacing: -0.04em;
+.panel-header h2,
+.info-card h3 {
+    font-family: "Sora", sans-serif;
 }
 
 .brand {
-    font-size: 1.2rem;
+    font-size: 1.18rem;
     font-weight: 700;
+    letter-spacing: -0.03em;
 }
 
 .topnav {
@@ -73,7 +75,7 @@ code {
     align-items: center;
     gap: 16px;
     color: var(--ink-soft);
-    font-size: 0.94rem;
+    font-size: 0.95rem;
 }
 
 .topnav a:hover,
@@ -83,45 +85,50 @@ code {
 
 .content {
     display: grid;
-    gap: 22px;
+    gap: 18px;
 }
 
 .hero,
-.demo-section,
-.detail-card {
-    background: rgba(255, 250, 244, 0.86);
+.demo-panel,
+.info-card {
     border: 1px solid var(--line);
-    box-shadow: var(--shadow);
+    background: rgba(255, 255, 255, 0.84);
+    backdrop-filter: blur(10px);
 }
 
 .hero,
-.demo-section {
-    border-radius: 28px;
-    padding: 28px;
+.demo-panel {
+    border-radius: 24px;
+    padding: 34px;
+}
+
+.hero {
+    text-align: center;
 }
 
 .eyebrow,
-.section-kicker,
-.card-kicker {
+.section-label,
+.card-label {
     margin: 0 0 12px;
     color: var(--ink-soft);
-    font-size: 0.76rem;
+    font-size: 0.75rem;
     font-weight: 700;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.15em;
     text-transform: uppercase;
 }
 
 .hero h1 {
-    margin: 0;
-    font-size: clamp(2.8rem, 7vw, 4.9rem);
+    max-width: 12ch;
+    margin: 0 auto;
+    font-size: clamp(2.8rem, 7vw, 5.4rem);
     line-height: 0.92;
-    max-width: 9ch;
+    letter-spacing: -0.05em;
 }
 
 .lead,
-.section-copy,
-.detail-card p,
-.meta-list {
+.panel-copy,
+.info-card p,
+.signal-strip {
     margin: 0;
     color: var(--ink-soft);
     line-height: 1.72;
@@ -129,12 +136,13 @@ code {
 
 .lead {
     max-width: 60ch;
-    margin-top: 20px;
-    font-size: 1.06rem;
+    margin: 20px auto 0;
+    font-size: 1.04rem;
 }
 
 .actions {
     display: flex;
+    justify-content: center;
     flex-wrap: wrap;
     gap: 12px;
     margin-top: 26px;
@@ -153,7 +161,7 @@ code {
 
 .button-primary {
     background: var(--accent);
-    color: #f7f4ee;
+    color: #f7f7f3;
 }
 
 .button-secondary {
@@ -161,56 +169,69 @@ code {
     border-color: var(--line);
 }
 
-.meta-list {
-    display: grid;
+.signal-strip {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
     gap: 10px;
-    margin-top: 24px;
-    padding-left: 18px;
+    padding: 0;
+    list-style: none;
+    margin-top: 22px;
 }
 
-.section-header {
+.signal-strip li {
+    min-height: 40px;
+    padding: 0 14px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    background: var(--surface-soft);
+    border: 1px solid rgba(17, 33, 31, 0.06);
+}
+
+.panel-header {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 340px);
     gap: 18px;
     align-items: end;
     margin-bottom: 18px;
 }
 
-.section-header h2,
-.detail-card h3 {
+.panel-header h2,
+.info-card h3 {
     margin: 0;
+    letter-spacing: -0.04em;
 }
 
-.section-header h2 {
-    font-size: clamp(1.9rem, 4vw, 2.8rem);
+.panel-header h2 {
+    font-size: clamp(2rem, 4vw, 3rem);
 }
 
-.demo-card {
+.demo-frame {
     padding: 14px;
-    border-radius: 22px;
-    background: var(--surface-alt);
-    border: 1px solid rgba(18, 41, 38, 0.07);
+    border-radius: 18px;
+    background: #171c1b;
 }
 
 .demo-gif {
     width: 100%;
-    border-radius: 14px;
-    border: 1px solid rgba(18, 41, 38, 0.1);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.details-grid {
+.info-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 16px;
+    gap: 18px;
 }
 
-.detail-card {
-    border-radius: 22px;
+.info-card {
+    border-radius: 20px;
     padding: 22px;
 }
 
-.detail-card h3 {
-    font-size: 1.28rem;
+.info-card h3 {
+    font-size: 1.26rem;
     margin-bottom: 12px;
 }
 
@@ -226,16 +247,16 @@ code {
     font-weight: 600;
 }
 
-@media (max-width: 900px) {
-    .section-header,
-    .details-grid {
+@media (max-width: 920px) {
+    .panel-header,
+    .info-grid {
         grid-template-columns: 1fr;
     }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 680px) {
     .page-shell {
-        width: min(100% - 20px, 1000px);
+        width: min(100% - 20px, 1100px);
         padding-top: 18px;
         padding-bottom: 36px;
     }
@@ -247,13 +268,21 @@ code {
     }
 
     .hero,
-    .demo-section,
-    .detail-card {
-        border-radius: 22px;
+    .demo-panel,
+    .info-card {
+        border-radius: 18px;
         padding: 18px;
     }
 
     .hero h1 {
-        font-size: clamp(2.25rem, 13vw, 3.8rem);
+        font-size: clamp(2.25rem, 13vw, 4rem);
+    }
+
+    .signal-strip {
+        justify-content: flex-start;
+    }
+
+    .actions {
+        justify-content: flex-start;
     }
 }
