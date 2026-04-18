@@ -11,6 +11,7 @@ permissions:
 jobs:
   release:
     runs-on: macos-15
+    environment: App Prod
 
     steps:
       - name: Checkout
@@ -26,6 +27,37 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Validate release secrets
+        env:
+          MACOS_DEVELOPER_ID_APPLICATION: ${{ secrets.MACOS_DEVELOPER_ID_APPLICATION }}
+          MACOS_DEVELOPER_ID_P12_BASE64: ${{ secrets.MACOS_DEVELOPER_ID_P12_BASE64 }}
+          MACOS_DEVELOPER_ID_P12_PASSWORD: ${{ secrets.MACOS_DEVELOPER_ID_P12_PASSWORD }}
+          APPLE_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
+          APPLE_NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
+          APPLE_NOTARY_API_KEY: ${{ secrets.APPLE_NOTARY_API_KEY }}
+        run: |
+          missing=()
+          required=(
+            MACOS_DEVELOPER_ID_APPLICATION
+            MACOS_DEVELOPER_ID_P12_BASE64
+            MACOS_DEVELOPER_ID_P12_PASSWORD
+            APPLE_NOTARY_KEY_ID
+            APPLE_NOTARY_ISSUER_ID
+            APPLE_NOTARY_API_KEY
+          )
+
+          for name in "${required[@]}"; do
+            if [[ -z "${!name}" ]]; then
+              missing+=("$name")
+            fi
+          done
+
+          if [[ "${#missing[@]}" -gt 0 ]]; then
+            printf 'Missing GitHub Actions secrets: %s\n' "${missing[*]}" >&2
+            printf 'Add them under Settings > Secrets and variables > Actions > Repository secrets.\n' >&2
+            exit 1
+          fi
 
       - name: Prepare signing assets
         env:

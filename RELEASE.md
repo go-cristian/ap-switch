@@ -24,7 +24,11 @@ Script principal:
 
 ## Secrets requeridos en GitHub
 
-Agregar estos secrets en el repo:
+Agregar estos secrets en el repo, como entries individuales en:
+
+- `Settings > Secrets and variables > Actions > Repository secrets`
+
+No subir un solo secret con todo el `.env`. El workflow espera un secret por nombre.
 
 - `MACOS_DEVELOPER_ID_APPLICATION`
   - debe ser del team `3EUA8SZ453`
@@ -39,6 +43,12 @@ Agregar estos secrets en el repo:
   - issuer id de App Store Connect API key
 - `APPLE_NOTARY_API_KEY`
   - contenido completo del archivo `.p8`
+
+Notas de formato:
+
+- Pega solo el valor del secret, no la parte `NOMBRE=`.
+- `MACOS_DEVELOPER_ID_P12_BASE64` debe ir en una sola linea.
+- `APPLE_NOTARY_API_KEY` debe incluir `BEGIN PRIVATE KEY` y `END PRIVATE KEY`.
 
 ## Generar el secret del certificado
 
