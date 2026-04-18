@@ -1,12 +1,12 @@
 :root {
-    --bg: #f7f5f1;
+    --bg: #f3f7fb;
     --surface: #ffffff;
-    --surface-soft: #f4f2ec;
-    --ink: #11211f;
-    --ink-soft: #5f6f6b;
-    --line: rgba(17, 33, 31, 0.11);
-    --accent: #164b44;
-    --accent-soft: #dceae6;
+    --surface-soft: #ecf3fb;
+    --ink: #122033;
+    --ink-soft: #607083;
+    --line: rgba(18, 32, 51, 0.11);
+    --accent: #2b63a8;
+    --accent-soft: #d9e7f9;
 }
 
 * {
@@ -22,8 +22,8 @@ body {
     font-family: "Instrument Sans", sans-serif;
     color: var(--ink);
     background:
-        linear-gradient(rgba(17, 33, 31, 0.028) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(17, 33, 31, 0.028) 1px, transparent 1px),
+        linear-gradient(rgba(18, 32, 51, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(18, 32, 51, 0.025) 1px, transparent 1px),
         var(--bg);
     background-size: 32px 32px, 32px 32px, auto;
 }
@@ -57,6 +57,12 @@ code {
     padding-bottom: 34px;
 }
 
+.topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
 .brand,
 .hero h1,
 .panel-header h2,
@@ -73,14 +79,46 @@ code {
 .topnav {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 4px;
+    padding: 6px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.86);
     color: var(--ink-soft);
     font-size: 0.95rem;
 }
 
-.topnav a:hover,
+.topnav a {
+    padding: 10px 14px;
+    border-radius: 999px;
+}
+
+.topnav a:hover {
+    background: var(--surface-soft);
+    color: var(--ink);
+}
+
+.nav-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #f7fbff;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.nav-cta:hover,
 .link-list a:hover {
     color: var(--accent);
+}
+
+.nav-cta:hover {
+    background: #1f4f89;
+    color: #f7fbff;
 }
 
 .content {
@@ -186,7 +224,7 @@ code {
     display: inline-flex;
     align-items: center;
     background: var(--surface-soft);
-    border: 1px solid rgba(17, 33, 31, 0.06);
+    border: 1px solid rgba(18, 32, 51, 0.06);
 }
 
 .panel-header {
@@ -210,7 +248,7 @@ code {
 .demo-frame {
     padding: 14px;
     border-radius: 18px;
-    background: #171c1b;
+    background: #1b2330;
 }
 
 .demo-gif {
@@ -262,9 +300,23 @@ code {
     }
 
     .topbar,
+    .topbar-actions,
     .topnav {
         flex-direction: column;
         align-items: flex-start;
+    }
+
+    .topbar-actions {
+        width: 100%;
+    }
+
+    .topnav {
+        width: 100%;
+        border-radius: 18px;
+    }
+
+    .nav-cta {
+        min-width: 140px;
     }
 
     .hero,
