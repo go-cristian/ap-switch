@@ -6,6 +6,8 @@ APP_NAME="ApSwitcher"
 BUNDLE_ID="dev.cgomez.apswitcher"
 APP_VERSION="${APSWITCHER_VERSION:-0.1.0}"
 APP_BUILD_NUMBER="${APSWITCHER_BUILD_NUMBER:-1}"
+ICON_NAME="AppIcon"
+ICON_SOURCE_SVG="$ROOT_DIR/assets/${ICON_NAME}.svg"
 DIST_DIR="$ROOT_DIR/dist"
 APP_DIR="$DIST_DIR/${APP_NAME}.app"
 CONTENTS_DIR="$APP_DIR/Contents"
@@ -29,6 +31,36 @@ mkdir -p "$MACOS_DIR" "$RESOURCES_DIR"
 cp "$BIN_DIR/$APP_NAME" "$MACOS_DIR/$APP_NAME"
 chmod +x "$MACOS_DIR/$APP_NAME"
 
+generate_app_icon() {
+  [[ -f "$ICON_SOURCE_SVG" ]] || return 0
+
+  local temp_dir
+  temp_dir="$(mktemp -d "${TMPDIR:-/tmp}/apswitcher-icon.XXXXXX")"
+  local iconset_dir="$temp_dir/${ICON_NAME}.iconset"
+  local rendered_png="$temp_dir/$(basename "$ICON_SOURCE_SVG").png"
+
+  mkdir -p "$iconset_dir"
+  /usr/bin/qlmanage -t -s 1024 -o "$temp_dir" "$ICON_SOURCE_SVG" >/dev/null 2>&1
+
+  if [[ ! -f "$rendered_png" ]]; then
+    echo "Failed to render $ICON_SOURCE_SVG into PNG." >&2
+    rm -rf "$temp_dir"
+    exit 1
+  fi
+
+  for size in 16 32 128 256 512; do
+    /usr/bin/sips -s format png -z "$size" "$size" "$rendered_png" \
+      --out "$iconset_dir/icon_${size}x${size}.png" >/dev/null
+    /usr/bin/sips -s format png -z "$((size * 2))" "$((size * 2))" "$rendered_png" \
+      --out "$iconset_dir/icon_${size}x${size}@2x.png" >/dev/null
+  done
+
+  /usr/bin/iconutil -c icns "$iconset_dir" -o "$RESOURCES_DIR/${ICON_NAME}.icns"
+  rm -rf "$temp_dir"
+}
+
+generate_app_icon
+
 cat > "$CONTENTS_DIR/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -42,6 +74,8 @@ cat > "$CONTENTS_DIR/Info.plist" <<PLIST
     <string>${BUNDLE_ID}</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
+    <key>CFBundleIconFile</key>
+    <string>${ICON_NAME}</string>
     <key>CFBundleName</key>
     <string>${APP_NAME}</string>
     <key>CFBundlePackageType</key>

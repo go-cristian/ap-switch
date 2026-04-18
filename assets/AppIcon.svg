@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="152" y1="124" x2="880" y2="916" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#69523B"/>
+      <stop offset="0.45" stop-color="#3D2D22"/>
+      <stop offset="1" stop-color="#211913"/>
+    </linearGradient>
+    <linearGradient id="frame" x1="188" y1="156" x2="856" y2="868" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#D9BD7A"/>
+      <stop offset="0.5" stop-color="#9C7335"/>
+      <stop offset="1" stop-color="#E7D3A3"/>
+    </linearGradient>
+    <linearGradient id="windowFill" x1="268" y1="256" x2="754" y2="760" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F4E8CC"/>
+      <stop offset="1" stop-color="#D8C39B"/>
+    </linearGradient>
+    <linearGradient id="windowChrome" x1="244" y1="262" x2="790" y2="696" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#374541"/>
+      <stop offset="1" stop-color="#1E2624"/>
+    </linearGradient>
+    <linearGradient id="copper" x1="290" y1="316" x2="734" y2="716" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#D28B4B"/>
+      <stop offset="0.55" stop-color="#A45D28"/>
+      <stop offset="1" stop-color="#F0BE7A"/>
+    </linearGradient>
+    <filter id="shadow" x="114" y="114" width="796" height="796" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feOffset dy="22"/>
+      <feGaussianBlur stdDeviation="20"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.117647 0 0 0 0 0.0784314 0 0 0 0 0.0470588 0 0 0 0.32 0"/>
+      <feBlend in2="SourceGraphic" mode="normal"/>
+    </filter>
+  </defs>
+
+  <rect width="1024" height="1024" rx="232" fill="url(#bg)"/>
+  <g filter="url(#shadow)">
+    <rect x="98" y="98" width="828" height="828" rx="194" fill="none" stroke="url(#frame)" stroke-width="26"/>
+    <rect x="140" y="140" width="744" height="744" rx="164" fill="none" stroke="#231A13" stroke-opacity="0.55" stroke-width="10"/>
+
+    <circle cx="190" cy="190" r="16" fill="#E3C98D"/>
+    <circle cx="834" cy="190" r="16" fill="#E3C98D"/>
+    <circle cx="190" cy="834" r="16" fill="#E3C98D"/>
+    <circle cx="834" cy="834" r="16" fill="#E3C98D"/>
+
+    <rect x="244" y="250" width="332" height="262" rx="42" fill="url(#windowFill)" stroke="url(#windowChrome)" stroke-width="18"/>
+    <rect x="260" y="268" width="300" height="52" rx="20" fill="url(#windowChrome)"/>
+    <circle cx="296" cy="294" r="8" fill="#D8C39B"/>
+    <circle cx="324" cy="294" r="8" fill="#B07A3E"/>
+    <circle cx="352" cy="294" r="8" fill="#D8C39B"/>
+
+    <rect x="448" y="430" width="332" height="262" rx="42" fill="url(#windowFill)" stroke="url(#windowChrome)" stroke-width="18"/>
+    <rect x="464" y="448" width="300" height="52" rx="20" fill="url(#windowChrome)"/>
+    <circle cx="500" cy="474" r="8" fill="#D8C39B"/>
+    <circle cx="528" cy="474" r="8" fill="#B07A3E"/>
+    <circle cx="556" cy="474" r="8" fill="#D8C39B"/>
+
+    <path d="M334 636C395 732 586 758 694 672" fill="none" stroke="url(#copper)" stroke-width="54" stroke-linecap="round"/>
+    <path d="M679 616L736 632L710 686" fill="none" stroke="url(#copper)" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <path d="M692 388C633 288 440 264 334 348" fill="none" stroke="url(#copper)" stroke-width="54" stroke-linecap="round"/>
+    <path d="M351 404L294 388L320 334" fill="none" stroke="url(#copper)" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
