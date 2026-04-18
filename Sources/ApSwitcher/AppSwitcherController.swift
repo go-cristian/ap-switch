@@ -33,7 +33,7 @@ final class SwitcherOverlayModel: ObservableObject {
     @Published var selectedIndex = 0
     @Published var isVisible = false
     @Published var stats = SwitcherSpaceStats.empty
-    @Published var footerMessage = "Option+Tab y flechas recorren ventanas. Suelta Option o presiona Enter para activar."
+    @Published var footerMessage = "Option+Tab o Cmd+Tab experimental recorren ventanas. Suelta el modificador o presiona Enter para activar."
 
     var selectedWindow: SwitcherWindow? {
         guard windows.indices.contains(selectedIndex) else {

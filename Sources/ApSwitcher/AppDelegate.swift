@@ -37,23 +37,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         hotkeyMonitor.onOptionTab = { [weak self] backwards in
             Task { @MainActor [weak self] in
-                guard let self else {
-                    return
-                }
-
-                if !self.accessibilityPermissionController.isTrusted {
-                    if self.hasRequestedAccessibilitySystemPrompt || self.hasShownAccessibilityPrimer {
-                        self.presentAccessibilityPermissionHelpIfNeeded()
-                    } else {
-                        self.presentAccessibilityPermissionPrimerIfNeeded()
-                    }
-                    return
-                }
-
-                self.switcherController?.handleOptionTab(backwards: backwards)
+                self?.handleSwitcherHotkey(backwards: backwards)
+            }
+        }
+        hotkeyMonitor.onCommandTab = { [weak self] backwards in
+            Task { @MainActor [weak self] in
+                self?.handleSwitcherHotkey(backwards: backwards)
             }
         }
         hotkeyMonitor.onOptionReleased = { [weak switcherController] in
+            Task { @MainActor in
+                switcherController?.handleOptionReleased()
+            }
+        }
+        hotkeyMonitor.onCommandReleased = { [weak switcherController] in
             Task { @MainActor in
                 switcherController?.handleOptionReleased()
             }
@@ -150,7 +147,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let alert = NSAlert()
         alert.alertStyle = .warning
         alert.messageText = "ApSwitcher necesita permiso de Accessibility"
-        alert.informativeText = "Presiona Continuar y macOS mostrara el permiso del sistema. Sin ese permiso, Option+Tab no puede capturar teclado global ni enfocar ventanas."
+        alert.informativeText = "Presiona Continuar y macOS mostrara el permiso del sistema. Sin ese permiso, ApSwitcher no puede capturar Option+Tab ni el modo experimental de Command+Tab, y tampoco enfocar ventanas."
         alert.addButton(withTitle: "Continuar")
         alert.addButton(withTitle: "Mas tarde")
 
@@ -227,5 +224,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if response == .alertFirstButtonReturn {
             requestScreenRecordingAccessIfNeeded()
         }
+    }
+
+    private func handleSwitcherHotkey(backwards: Bool) {
+        if !accessibilityPermissionController.isTrusted {
+            if hasRequestedAccessibilitySystemPrompt || hasShownAccessibilityPrimer {
+                presentAccessibilityPermissionHelpIfNeeded()
+            } else {
+                presentAccessibilityPermissionPrimerIfNeeded()
+            }
+            return
+        }
+
+        switcherController?.handleOptionTab(backwards: backwards)
     }
 }
