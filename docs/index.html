@@ -6,108 +6,127 @@
     <title>ApSwitcher</title>
     <meta
         name="description"
-        content="Window switching for macOS with Cmd+Tab. ApSwitcher switches real windows instead of only switching apps."
+        content="Cmd+Tab for real windows on macOS. ApSwitcher switches windows instead of only switching apps."
     >
     <meta property="og:title" content="ApSwitcher">
     <meta
         property="og:description"
-        content="Window switching for macOS with Cmd+Tab. ApSwitcher switches real windows instead of only switching apps."
+        content="Cmd+Tab for real windows on macOS. ApSwitcher switches windows instead of only switching apps."
     >
     <meta property="og:type" content="website">
     <meta property="og:image" content="assets/apswitcher-demo.gif">
-    <meta name="theme-color" content="#0c2e2a">
+    <meta name="theme-color" content="#15312d">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
         rel="stylesheet"
     >
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <main class="page">
-        <header class="hero">
-            <div class="hero-copy">
-                <p class="eyebrow">macOS utility</p>
-                <h1>Window switching for macOS with <code>Cmd+Tab</code>.</h1>
-                <p class="lead">
-                    ApSwitcher switches real windows, not just apps.
-                    It keeps the flow closer to Windows while staying small and practical on macOS.
-                </p>
-
-                <div class="actions">
-                    <a
-                        class="button button-primary"
-                        href="https://github.com/go-cristian/ap-switch/releases/latest"
-                        target="_blank"
-                        rel="noreferrer"
-                    >
-                        Download latest DMG
-                    </a>
-                    <a
-                        class="button button-secondary"
-                        href="https://github.com/go-cristian/ap-switch"
-                        target="_blank"
-                        rel="noreferrer"
-                    >
-                        View repository
-                    </a>
-                </div>
-            </div>
-
-            <section class="demo-card" aria-labelledby="demo-title">
-                <div class="card-header">
-                    <p class="card-label" id="demo-title">Quick demo</p>
-                    <span class="card-badge">v0.0.4</span>
-                </div>
-                <img
-                    class="demo-gif"
-                    src="assets/apswitcher-demo.gif"
-                    alt="Animated demo of ApSwitcher switching between windows on macOS"
-                >
-            </section>
+    <div class="page-shell">
+        <header class="topbar">
+            <a class="brand" href="/">ApSwitcher</a>
+            <nav class="topnav">
+                <a href="https://github.com/go-cristian/ap-switch/releases/latest" target="_blank" rel="noreferrer">Download</a>
+                <a href="https://github.com/go-cristian/ap-switch" target="_blank" rel="noreferrer">GitHub</a>
+                <a href="https://github.com/go-cristian/ap-switch/issues" target="_blank" rel="noreferrer">Issues</a>
+            </nav>
         </header>
 
-        <section class="section">
-            <div class="feature-grid">
-                <article class="feature">
-                    <h2>Switch windows, not apps</h2>
+        <main class="layout">
+            <section class="hero">
+                <div class="hero-copy">
+                    <p class="eyebrow">macOS utility</p>
+                    <h1><span>Cmd+Tab</span> for real windows.</h1>
+                    <p class="lead">
+                        ApSwitcher makes macOS switch across windows instead of only across apps.
+                        It is built for people who want the faster Windows-style flow without a bloated utility.
+                    </p>
+
+                    <div class="actions">
+                        <a
+                            class="button button-primary"
+                            href="https://github.com/go-cristian/ap-switch/releases/latest"
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            Get the DMG
+                        </a>
+                        <a
+                            class="button button-secondary"
+                            href="https://github.com/go-cristian/ap-switch"
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            Open repository
+                        </a>
+                    </div>
+                </div>
+
+                <aside class="hero-panel">
+                    <p class="panel-label">What matters</p>
+                    <ul class="signal-list">
+                        <li>Switches individual windows, not app buckets</li>
+                        <li>Supports recent-window order and reverse cycling</li>
+                        <li>Uses Accessibility for control and Screen Recording for thumbnails</li>
+                    </ul>
+                    <div class="version-chip">Public build: v0.0.4</div>
+                </aside>
+            </section>
+
+            <section class="demo-stage" aria-labelledby="demo-title">
+                <div class="stage-heading">
+                    <div>
+                        <p class="eyebrow">Live view</p>
+                        <h2 id="demo-title">The switcher in motion.</h2>
+                    </div>
+                    <p class="stage-note">
+                        The GIF below shows the current behavior: centered overlay, window-by-window selection,
+                        and the actual workflow the app is built around.
+                    </p>
+                </div>
+
+                <div class="demo-frame">
+                    <img
+                        class="demo-gif"
+                        src="assets/apswitcher-demo.gif"
+                        alt="Animated demo of ApSwitcher switching between windows on macOS"
+                    >
+                </div>
+            </section>
+
+            <section class="info-band">
+                <article class="info-card">
+                    <p class="card-kicker">Why it feels different</p>
+                    <h3>No app stack guessing.</h3>
                     <p>
-                        Every top-level window gets its own slot, so two browser windows and one terminal
-                        appear as three separate choices.
+                        If you have two browser windows and one terminal, you see three targets.
+                        The selector stays faithful to what is actually open.
                     </p>
                 </article>
-                <article class="feature">
-                    <h2>Built for fast back-and-forth</h2>
-                    <p>
-                        Recent-window ordering, <code>Cmd+Shift+Tab</code>, arrow navigation,
-                        and window previews make the selector usable in real work, not just as a toy.
-                    </p>
-                </article>
-                <article class="feature">
-                    <h2>Simple install path</h2>
+
+                <article class="info-card">
+                    <p class="card-kicker">Install path</p>
+                    <h3>Simple and notarized.</h3>
                     <p>
                         Download the notarized DMG, move the app into Applications,
-                        grant <code>Accessibility</code>, and optionally enable <code>Screen Recording</code> for thumbnails.
+                        approve Accessibility, and enable Screen Recording if you want previews.
                     </p>
                 </article>
-            </div>
-        </section>
 
-        <section class="section callout">
-            <div>
-                <p class="eyebrow">Source</p>
-                <h2>Open source and release-driven.</h2>
-                <p class="callout-text">
-                    The repository includes the app source, release automation, and notarized DMG builds.
-                </p>
-            </div>
-            <div class="link-list">
-                <a href="https://github.com/go-cristian/ap-switch" target="_blank" rel="noreferrer">Repository</a>
-                <a href="https://github.com/go-cristian/ap-switch/releases/tag/v0.0.4" target="_blank" rel="noreferrer">Release notes</a>
-                <a href="https://github.com/go-cristian/ap-switch/issues" target="_blank" rel="noreferrer">Issues</a>
-            </div>
-        </section>
-    </main>
+                <article class="info-card links-card">
+                    <p class="card-kicker">Links</p>
+                    <h3>Source, releases, issues.</h3>
+                    <div class="inline-links">
+                        <a href="https://github.com/go-cristian/ap-switch/releases/tag/v0.0.4" target="_blank" rel="noreferrer">Release notes</a>
+                        <a href="https://github.com/go-cristian/ap-switch" target="_blank" rel="noreferrer">Repository</a>
+                        <a href="https://github.com/go-cristian/ap-switch/issues" target="_blank" rel="noreferrer">Issues</a>
+                    </div>
+                </article>
+            </section>
+        </main>
+    </div>
 </body>
 </html>
