@@ -2,6 +2,7 @@ import AppKit
 import CoreGraphics
 @preconcurrency import ScreenCaptureKit
 
+@MainActor
 @available(macOS 14.0, *)
 enum WindowPreviewProvider {
     enum PreviewError: Error {

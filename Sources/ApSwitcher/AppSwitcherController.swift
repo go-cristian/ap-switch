@@ -336,7 +336,7 @@ final class AppSwitcherController {
         }
         let previewLoaderRef = previewLoader
 
-        previewTask = Task { [weak self] in
+        previewTask = Task { @MainActor [weak self] in
             guard let self else {
                 return
             }

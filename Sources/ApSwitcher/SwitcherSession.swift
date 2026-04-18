@@ -10,10 +10,12 @@ protocol WindowCatalogProviding {
 
 extension WindowCatalogService: WindowCatalogProviding {}
 
-protocol WindowPreviewLoading: Sendable {
+@MainActor
+protocol WindowPreviewLoading {
     func loadImages(for windowIDs: [CGWindowID], targetSize: CGSize) async throws -> [CGWindowID: NSImage]
 }
 
+@MainActor
 @available(macOS 14.0, *)
 struct ScreenCaptureWindowPreviewLoader: WindowPreviewLoading {
     func loadImages(for windowIDs: [CGWindowID], targetSize: CGSize) async throws -> [CGWindowID: NSImage] {
@@ -29,6 +31,7 @@ protocol OverlayPresenting {
 
 extension OverlayWindowController: OverlayPresenting {}
 
+@MainActor
 struct SwitcherSessionCandidate {
     let id: WindowIdentity
     let title: String
@@ -39,6 +42,7 @@ struct SwitcherSessionCandidate {
     let isMinimized: Bool
 }
 
+@MainActor
 struct SwitcherSession {
     let windows: [SwitcherWindow]
     let selectedIndex: Int
@@ -47,6 +51,7 @@ struct SwitcherSession {
     let snapshotWindowIDs: [WindowIdentity: CGWindowID]
 }
 
+@MainActor
 enum SwitcherFooterMessageResolver {
     static let normalHint = "Option+Tab y flechas recorren ventanas. Suelta Option o presiona Enter para activar."
     static let missingScreenRecording = "Activa Screen Recording para ApSwitcher y reinicia la app para ver miniaturas."
@@ -68,6 +73,7 @@ enum SwitcherFooterMessageResolver {
     }
 }
 
+@MainActor
 enum SwitcherSessionFactory {
     static func make(
         candidates: [SwitcherSessionCandidate],
