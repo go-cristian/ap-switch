@@ -49,6 +49,30 @@ struct WindowUsageTrackerTests {
         #expect(tracker.recentWindows.last?.title == "Window 5")
     }
 
+    @Test func recordSwitcherTransitionKeepsDestinationThenSourceAtFront() {
+        let source = makeWindow(title: "Editor", x: 0)
+        let destination = makeWindow(title: "Browser", x: 1)
+        let older = makeWindow(title: "Terminal", x: 2)
+        let tracker = WindowUsageTracker { source }
+
+        tracker.noteCurrentWindow()
+        tracker.recordSwitcherTransition(from: nil, to: older)
+        tracker.recordSwitcherTransition(from: source, to: destination)
+
+        #expect(tracker.recentWindows == [destination, source, older])
+    }
+
+    @Test func recordSwitcherTransitionDeduplicatesExistingWindows() {
+        let source = makeWindow(title: "Editor", x: 0)
+        let destination = makeWindow(title: "Browser", x: 1)
+        let tracker = WindowUsageTracker { source }
+
+        tracker.recordSwitcherTransition(from: nil, to: destination)
+        tracker.recordSwitcherTransition(from: source, to: destination)
+
+        #expect(tracker.recentWindows == [destination, source])
+    }
+
     private func makeWindow(title: String, x: Int = 0) -> WindowIdentity {
         WindowIdentity(
             appPID: 1,

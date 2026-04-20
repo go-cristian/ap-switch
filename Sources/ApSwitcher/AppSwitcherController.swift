@@ -52,7 +52,20 @@ final class SwitcherOverlayModel: ObservableObject {
 final class AppSwitcherController {
     let overlayModel = SwitcherOverlayModel()
 
+    private struct CachedCatalogSnapshot {
+        let catalog: WindowCatalog
+        let orderingCandidates: [WindowOrderingCandidate]
+        let updatedAt: Date
+
+        var isFresh: Bool {
+            Date().timeIntervalSince(updatedAt) <= 1.5
+        }
+    }
+
+    private let catalogRefreshInterval: TimeInterval = 1.5
     private let previewRefreshInterval: TimeInterval = 5
+    private let spaceChangeSettleInterval: TimeInterval = 0.35
+    private let overlayReconciliationInterval: TimeInterval = 0.1
     private let previewTargetSize = CGSize(width: 444, height: 252)
     private let catalogService: any WindowCatalogProviding
     private let usageTracker: WindowUsageTracker
@@ -60,9 +73,16 @@ final class AppSwitcherController {
     private var activationTargets: [WindowIdentity: WindowActivationTarget] = [:]
     private var snapshotWindowIDs: [WindowIdentity: CGWindowID] = [:]
     private var previewCache: [CGWindowID: NSImage] = [:]
+    private var cachedCatalogSnapshot: CachedCatalogSnapshot?
     private var previewTask: Task<Void, Never>?
+    private var pendingShowTask: Task<Void, Never>?
+    private var overlayReconciliationTask: Task<Void, Never>?
+    private var catalogRefreshTimer: Timer?
     private var previewRefreshTimer: Timer?
     private var overlayFailsafeTimer: Timer?
+    private var activeSpaceObserver: NSObjectProtocol?
+    private var lastActiveSpaceChangeAt = Date.distantPast
+    private var sourceWindowBeforeSwitcher: WindowIdentity?
     private let overlayPresenterFactory: @MainActor (SwitcherOverlayModel) -> any OverlayPresenting
     private lazy var overlayPresenter = overlayPresenterFactory(overlayModel)
 
@@ -84,9 +104,13 @@ final class AppSwitcherController {
         self.previewLoader = previewLoader
         self.overlayPresenterFactory = overlayPresenterFactory
 
+        observeActiveSpaceChanges()
+        startCatalogRefreshTimer()
         if previewLoader != nil {
             startPreviewRefreshTimer()
         }
+
+        refreshCatalogSnapshot(force: true)
     }
 
     var isVisible: Bool {
@@ -99,10 +123,21 @@ final class AppSwitcherController {
             return
         }
 
+        guard !shouldDelayForRecentSpaceChange else {
+            scheduleDeferredShow(selectingBackward: backwards)
+            return
+        }
+
         showSwitcher(selectingBackward: backwards)
     }
 
     func handleCommandReleased() {
+        if pendingShowTask != nil && !overlayModel.isVisible {
+            pendingShowTask?.cancel()
+            pendingShowTask = nil
+            return
+        }
+
         guard overlayModel.isVisible else {
             return
         }
@@ -111,6 +146,8 @@ final class AppSwitcherController {
     }
 
     func handleEscape() {
+        pendingShowTask?.cancel()
+        pendingShowTask = nil
         hideSwitcher()
     }
 
@@ -132,22 +169,23 @@ final class AppSwitcherController {
 
     private func showSwitcher(selectingBackward: Bool) {
         usageTracker.noteCurrentWindow()
+        sourceWindowBeforeSwitcher = usageTracker.recentWindows.first
 
-        let catalog = catalogService.currentCatalog()
+        let snapshot = currentCatalogSnapshot()
+        let catalog = snapshot.catalog
         AppLogger.switcher.info(
-            "showSwitcher catalog items=\(catalog.items.count, privacy: .public) screenCaptureAccessGranted=\(catalog.screenCaptureAccessGranted, privacy: .public)"
+            "showSwitcher catalog items=\(catalog.items.count, privacy: .public) screenCaptureAccessGranted=\(catalog.screenCaptureAccessGranted, privacy: .public) usingFreshSnapshot=\(snapshot.isFresh, privacy: .public)"
         )
         guard !catalog.items.isEmpty else {
             NSSound.beep()
             return
         }
 
-        let orderingCandidates = catalogService.orderingCandidates(from: catalog.items)
         let orderedItems = catalog.items.map(\.sessionCandidate)
         guard let session = SwitcherSessionFactory.make(
             candidates: orderedItems,
             stats: catalog.stats,
-            orderingCandidates: orderingCandidates,
+            orderingCandidates: snapshot.orderingCandidates,
             recent: usageTracker.recentWindows,
             selectingBackward: selectingBackward,
             previewCache: previewCache,
@@ -179,6 +217,7 @@ final class AppSwitcherController {
             for: catalog.items,
             screenCaptureAccessGranted: catalog.screenCaptureAccessGranted
         )
+        scheduleOverlayReconciliation()
     }
 
     private func advanceSelection(movingForward: Bool) {
@@ -197,6 +236,10 @@ final class AppSwitcherController {
             return
         }
 
+        usageTracker.recordSwitcherTransition(
+            from: sourceWindowBeforeSwitcher,
+            to: selectedWindowID
+        )
         hideSwitcher()
         catalogService.activate(activationTarget)
     }
@@ -205,6 +248,10 @@ final class AppSwitcherController {
         AppLogger.switcher.info("hideSwitcher")
         previewTask?.cancel()
         previewTask = nil
+        pendingShowTask?.cancel()
+        pendingShowTask = nil
+        overlayReconciliationTask?.cancel()
+        overlayReconciliationTask = nil
         overlayFailsafeTimer?.invalidate()
         overlayFailsafeTimer = nil
         overlayModel.isVisible = false
@@ -215,6 +262,30 @@ final class AppSwitcherController {
         overlayModel.footerMessage = SwitcherFooterMessageResolver.normalHint
         activationTargets.removeAll()
         snapshotWindowIDs.removeAll()
+        sourceWindowBeforeSwitcher = nil
+    }
+
+    private func startCatalogRefreshTimer() {
+        catalogRefreshTimer?.invalidate()
+        catalogRefreshTimer = Timer.scheduledTimer(
+            timeInterval: catalogRefreshInterval,
+            target: self,
+            selector: #selector(handleCatalogRefreshTimer),
+            userInfo: nil,
+            repeats: true
+        )
+    }
+
+    private func observeActiveSpaceChanges() {
+        activeSpaceObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.activeSpaceDidChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.handleActiveSpaceChanged()
+            }
+        }
     }
 
     private func startPreviewRefreshTimer() {
@@ -245,8 +316,146 @@ final class AppSwitcherController {
     }
 
     @objc
+    private func handleCatalogRefreshTimer() {
+        guard !overlayModel.isVisible else {
+            return
+        }
+
+        refreshCatalogSnapshot(force: true)
+    }
+
+    @objc
     private func handlePreviewRefreshTimer() {
         refreshPreviewsInBackground()
+    }
+
+    private func handleActiveSpaceChanged() {
+        AppLogger.switcher.info("active space changed")
+        lastActiveSpaceChangeAt = Date()
+        cachedCatalogSnapshot = nil
+        pendingShowTask?.cancel()
+        pendingShowTask = nil
+
+        guard !overlayModel.isVisible else {
+            return
+        }
+
+        refreshCatalogSnapshot(force: true)
+    }
+
+    private var shouldDelayForRecentSpaceChange: Bool {
+        Date().timeIntervalSince(lastActiveSpaceChangeAt) < spaceChangeSettleInterval
+    }
+
+    private func scheduleDeferredShow(selectingBackward: Bool) {
+        pendingShowTask?.cancel()
+        let remainingDelay = max(0, spaceChangeSettleInterval - Date().timeIntervalSince(lastActiveSpaceChangeAt))
+        AppLogger.switcher.info("delaying showSwitcher after space change by \(remainingDelay, privacy: .public)s")
+
+        pendingShowTask = Task { @MainActor [weak self] in
+            guard let self else {
+                return
+            }
+
+            if remainingDelay > 0 {
+                try? await Task.sleep(nanoseconds: UInt64(remainingDelay * 1_000_000_000))
+            }
+
+            guard !Task.isCancelled, !self.overlayModel.isVisible else {
+                return
+            }
+
+            self.pendingShowTask = nil
+            self.showSwitcher(selectingBackward: selectingBackward)
+        }
+    }
+
+    private func scheduleOverlayReconciliation() {
+        overlayReconciliationTask?.cancel()
+        overlayReconciliationTask = Task { @MainActor [weak self] in
+            guard let self else {
+                return
+            }
+
+            try? await Task.sleep(nanoseconds: UInt64(overlayReconciliationInterval * 1_000_000_000))
+
+            guard !Task.isCancelled, self.overlayModel.isVisible else {
+                return
+            }
+
+            let freshSnapshot = self.refreshCatalogSnapshot(force: true)
+            guard self.overlayModel.isVisible else {
+                return
+            }
+
+            self.rebuildVisibleOverlay(using: freshSnapshot)
+            self.loadPreviewsIfNeeded(
+                for: freshSnapshot.catalog.items,
+                screenCaptureAccessGranted: freshSnapshot.catalog.screenCaptureAccessGranted
+            )
+        }
+    }
+
+    private func currentCatalogSnapshot() -> CachedCatalogSnapshot {
+        if let cachedCatalogSnapshot {
+            return cachedCatalogSnapshot
+        }
+
+        return refreshCatalogSnapshot(force: true)
+    }
+
+    @discardableResult
+    private func refreshCatalogSnapshot(force: Bool) -> CachedCatalogSnapshot {
+        if !force, let cachedCatalogSnapshot {
+            return cachedCatalogSnapshot
+        }
+
+        let catalog = catalogService.currentCatalog()
+        let orderingCandidates = catalogService.orderingCandidates(from: catalog.items)
+        let snapshot = CachedCatalogSnapshot(
+            catalog: catalog,
+            orderingCandidates: orderingCandidates,
+            updatedAt: Date()
+        )
+        cachedCatalogSnapshot = snapshot
+        AppLogger.switcher.info(
+            "refreshCatalogSnapshot items=\(catalog.items.count, privacy: .public) screenCaptureAccessGranted=\(catalog.screenCaptureAccessGranted, privacy: .public)"
+        )
+        return snapshot
+    }
+
+    private func rebuildVisibleOverlay(using snapshot: CachedCatalogSnapshot) {
+        guard overlayModel.isVisible else {
+            return
+        }
+
+        let selectedWindowID = overlayModel.selectedWindowID
+        let orderedItems = snapshot.catalog.items.map(\.sessionCandidate)
+        guard let session = SwitcherSessionFactory.make(
+            candidates: orderedItems,
+            stats: snapshot.catalog.stats,
+            orderingCandidates: snapshot.orderingCandidates,
+            recent: usageTracker.recentWindows,
+            selectingBackward: false,
+            previewCache: previewCache,
+            screenCaptureAccessGranted: snapshot.catalog.screenCaptureAccessGranted
+        ) else {
+            return
+        }
+
+        activationTargets = Dictionary(uniqueKeysWithValues: snapshot.catalog.items.map { ($0.id, $0.activationTarget) })
+        snapshotWindowIDs = session.snapshotWindowIDs
+        overlayModel.windows = session.windows
+        overlayModel.stats = session.stats
+        overlayModel.footerMessage = session.footerMessage
+
+        if let selectedWindowID,
+           let selectedIndex = overlayModel.windows.firstIndex(where: { $0.id == selectedWindowID }) {
+            overlayModel.selectedIndex = selectedIndex
+            return
+        }
+
+        overlayModel.selectedIndex = min(overlayModel.selectedIndex, max(overlayModel.windows.count - 1, 0))
     }
 
     private func loadPreviewsIfNeeded(
@@ -262,27 +471,22 @@ final class AppSwitcherController {
     }
 
     private func refreshPreviewsInBackground() {
-        let catalog = catalogService.currentCatalog()
-        guard catalog.screenCaptureAccessGranted else {
+        guard overlayModel.isVisible else {
+            AppLogger.preview.info("refreshPreviewsInBackground skipped because overlay is hidden")
+            return
+        }
+
+        let screenCaptureAccessGranted = cachedCatalogSnapshot?.catalog.screenCaptureAccessGranted ?? CGPreflightScreenCaptureAccess()
+        guard screenCaptureAccessGranted else {
             AppLogger.preview.info("refreshPreviewsInBackground skipped because Screen Recording is not granted")
             return
         }
 
-        if overlayModel.isVisible {
-            requestPreviewLoad(
-                for: Array(snapshotWindowIDs.values),
-                screenCaptureAccessGranted: catalog.screenCaptureAccessGranted,
-                forceRefresh: true,
-                updateVisibleOverlay: true
-            )
-            return
-        }
-
         requestPreviewLoad(
-            for: catalog.items.compactMap(\.snapshotWindowID),
-            screenCaptureAccessGranted: catalog.screenCaptureAccessGranted,
+            for: Array(snapshotWindowIDs.values),
+            screenCaptureAccessGranted: screenCaptureAccessGranted,
             forceRefresh: true,
-            updateVisibleOverlay: false
+            updateVisibleOverlay: true
         )
     }
 

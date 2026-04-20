@@ -40,6 +40,7 @@ struct SwitcherSessionCandidate {
     let preview: NSImage?
     let snapshotWindowID: CGWindowID?
     let isMinimized: Bool
+    let isOnCurrentDesktop: Bool
 }
 
 @MainActor
@@ -88,11 +89,14 @@ enum SwitcherSessionFactory {
             return nil
         }
 
+        let currentDesktopCandidates = candidates.filter(\.isOnCurrentDesktop)
+        let effectiveCandidates = currentDesktopCandidates.isEmpty ? candidates : currentDesktopCandidates
+        let effectiveCandidateIDs = Set(effectiveCandidates.map(\.id))
         let orderedIdentities = WindowSwitchingLogic.orderedWindowIdentities(
-            from: orderingCandidates,
+            from: orderingCandidates.filter { effectiveCandidateIDs.contains($0.identity) },
             recent: recent
         )
-        let candidateLookup = Dictionary(uniqueKeysWithValues: candidates.map { ($0.id, $0) })
+        let candidateLookup = Dictionary(uniqueKeysWithValues: effectiveCandidates.map { ($0.id, $0) })
         let orderedCandidates = orderedIdentities.compactMap { candidateLookup[$0] }
 
         guard !orderedCandidates.isEmpty else {
@@ -154,7 +158,8 @@ extension WindowCatalogItem {
             icon: icon,
             preview: preview,
             snapshotWindowID: snapshotWindowID,
-            isMinimized: isMinimized
+            isMinimized: isMinimized,
+            isOnCurrentDesktop: isOnCurrentDesktop
         )
     }
 }

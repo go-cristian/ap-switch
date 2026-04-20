@@ -35,16 +35,31 @@ final class WindowUsageTracker {
             return
         }
 
-        recentWindows.removeAll(where: { $0 == currentWindow })
-        recentWindows.insert(currentWindow, at: 0)
+        promote([currentWindow])
+    }
 
-        if recentWindows.count > 100 {
-            recentWindows.removeLast(recentWindows.count - 100)
+    func recordSwitcherTransition(from sourceWindow: WindowIdentity?, to destinationWindow: WindowIdentity) {
+        if let sourceWindow {
+            promote([destinationWindow, sourceWindow])
+            return
         }
+
+        promote([destinationWindow])
     }
 
     @objc
     private func handlePollTick() {
         noteCurrentWindow()
+    }
+
+    private func promote(_ windows: [WindowIdentity]) {
+        for window in windows.reversed() {
+            recentWindows.removeAll(where: { $0 == window })
+            recentWindows.insert(window, at: 0)
+        }
+
+        if recentWindows.count > 100 {
+            recentWindows.removeLast(recentWindows.count - 100)
+        }
     }
 }

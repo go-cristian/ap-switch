@@ -8,6 +8,8 @@ App ligera para macOS que replica el flujo de `Alt+Tab` de Windows con `Cmd+Tab`
 - Escucha `Cmd+Tab` globalmente.
 - Muestra un overlay centrado con todas las ventanas top-level detectables.
 - Usa orden reciente de uso por ventana para que el primer salto vaya a la ventana anterior.
+- Prioriza ventanas del escritorio actual cuando ya existen allí.
+- Reconcila la lista a los `100ms` de abrir el switcher para absorber cambios rápidos entre escritorios.
 - Activa la ventana seleccionada al soltar `Command`.
 - Soporta `Cmd+Shift+Tab` para navegar en reversa.
 - Soporta flechas izquierda/derecha y arriba/abajo para mover la selección mientras el overlay está abierto.
@@ -54,6 +56,7 @@ Cobertura actual:
 - `WindowSwitchingLogic`
 - `WindowUsageTracker`
 - `WindowFrame` y `WindowIdentity`
+- `SwitcherSessionFactory`
 
 La ruta sensible de runtime de macOS (`Accessibility`, `Screen Recording`, `AXUIElement`, `CGEventTap`, `NSPanel`, `ScreenCaptureKit`) no se cubre por unit test directo.
 
@@ -76,6 +79,12 @@ tccutil reset ScreenCapture dev.cgomez.apswitcher
 ```
 
 Luego reinicia la app y vuelve a aceptar `Screen Recording`.
+
+Si al cambiar muy rápido de escritorio el switcher muestra referencias viejas:
+
+1. mantén `Command` presionado una fracción de segundo más
+2. deja que la reconciliación a `100ms` reconstruya la lista
+3. si sigue fallando, revisa el log del subsystem `dev.cgomez.apswitcher`
 
 ## Empaquetar como `.app`
 

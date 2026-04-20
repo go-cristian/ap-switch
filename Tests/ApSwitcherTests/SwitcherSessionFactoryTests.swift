@@ -108,6 +108,26 @@ struct SwitcherSessionFactoryTests {
         #expect(session?.windows.first?.preview === cached)
     }
 
+    @Test func makeScopesSwitcherToCurrentDesktopWhenThoseWindowsExist() {
+        let currentDesktop = makeCandidate(title: "Editor", x: 0, ordinal: 0, isOnCurrentDesktop: true)
+        let previousDesktop = makeCandidate(title: "Browser", x: 10, ordinal: 1, isOnCurrentDesktop: false)
+
+        let session = SwitcherSessionFactory.make(
+            candidates: [previousDesktop, currentDesktop],
+            stats: .empty,
+            orderingCandidates: [
+                WindowOrderingCandidate(identity: previousDesktop.id, fallbackIndex: 0, isMinimized: false),
+                WindowOrderingCandidate(identity: currentDesktop.id, fallbackIndex: 1, isMinimized: false)
+            ],
+            recent: [previousDesktop.id, currentDesktop.id],
+            selectingBackward: false,
+            previewCache: [:],
+            screenCaptureAccessGranted: true
+        )
+
+        #expect(session?.windows.map(\.title) == ["Editor"])
+    }
+
     @Test func footerResolverCoversPermissionAndPreviewStates() {
         let noPreviewWindow = SwitcherWindow(
             id: WindowIdentity(appPID: 1, title: "Editor", frame: WindowFrame(CGRect(x: 0, y: 0, width: 100, height: 100)), ordinal: 0),
@@ -145,7 +165,8 @@ struct SwitcherSessionFactoryTests {
         x: Int,
         ordinal: Int,
         preview: NSImage? = nil,
-        snapshotWindowID: CGWindowID? = nil
+        snapshotWindowID: CGWindowID? = nil,
+        isOnCurrentDesktop: Bool = true
     ) -> SwitcherSessionCandidate {
         let id = WindowIdentity(
             appPID: 1,
@@ -161,7 +182,8 @@ struct SwitcherSessionFactoryTests {
             icon: NSImage(),
             preview: preview,
             snapshotWindowID: snapshotWindowID,
-            isMinimized: false
+            isMinimized: false,
+            isOnCurrentDesktop: isOnCurrentDesktop
         )
     }
 }

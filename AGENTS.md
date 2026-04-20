@@ -16,6 +16,7 @@ Guia operativa para futuras sesiones de Codex sobre `ApSwitcher`.
 - `Screen Recording` es requisito efectivo para miniaturas.
 - `Accessibility` es requisito efectivo para hotkey global y focus de ventanas.
 - La arquitectura actual ya separa una capa pura de sesión (`SwitcherSession.swift`) de los adaptadores sensibles de macOS.
+- El switcher prioriza ventanas del escritorio actual y reconcilia la lista `100ms` después de abrirse para absorber cambios rápidos entre Spaces.
 
 ## Mapa del repo
 
@@ -151,6 +152,24 @@ Pasos:
 2. `./scripts/install_app.sh`
 3. aceptar el prompt de `Screen Recording`
 4. cerrar y abrir de nuevo la app si macOS lo requiere
+
+### Cambios rápidos de escritorio muestran ventanas viejas
+
+Señal actual más importante:
+
+- La pertenencia a escritorio todavía se infiere por visibilidad `on-screen`, no por un `space id` real por ventana.
+
+Mitigaciones vigentes:
+
+1. invalidación de cache al recibir `activeSpaceDidChange`
+2. delay corto antes de mostrar el switcher justo después de cambiar de Space
+3. reconciliación de overlay a `100ms` tras abrir el switcher
+
+Si vuelve a aparecer:
+
+1. revisar logs de `dev.cgomez.apswitcher`
+2. comparar timestamps de `active space changed` y `showSwitcher`
+3. ajustar `spaceChangeSettleInterval` o `overlayReconciliationInterval` en `AppSwitcherController.swift`
 
 ### El prompt de permisos reaparece entre builds
 
