@@ -10,6 +10,7 @@ App ligera para macOS que replica el flujo de `Alt+Tab` de Windows con `Cmd+Tab`
 - Usa orden reciente de uso por ventana para que el primer salto vaya a la ventana anterior.
 - Prioriza ventanas del escritorio actual cuando ya existen allí.
 - Reconcila la lista a los `100ms` de abrir el switcher para absorber cambios rápidos entre escritorios.
+- Evita mejor las colisiones cuando hay ventanas casi idénticas del mismo app en escritorios distintos.
 - Activa la ventana seleccionada al soltar `Command`.
 - Soporta `Cmd+Shift+Tab` para navegar en reversa.
 - Soporta flechas izquierda/derecha y arriba/abajo para mover la selección mientras el overlay está abierto.

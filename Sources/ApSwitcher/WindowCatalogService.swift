@@ -65,6 +65,8 @@ final class WindowCatalogService {
         for app in runningApps {
             let axApp = AXUIElementCreateApplication(app.processIdentifier)
             let windows = axWindows(for: axApp)
+            var unmatchedOnScreenSnapshots = currentOnScreenSnapshots.filter { $0.ownerPID == app.processIdentifier }
+            var unmatchedSnapshots = allSnapshots.filter { $0.ownerPID == app.processIdentifier }
 
             for (ordinal, window) in windows.enumerated() {
                 guard shouldInclude(window: window) else {
@@ -80,13 +82,24 @@ final class WindowCatalogService {
                 )
                 let title = displayTitle(for: window, appName: app.localizedName ?? "App")
                 let isMinimized = boolValue(for: window, attribute: kAXMinimizedAttribute)
-                let snapshot = matchedSnapshot(
+                let onScreenSnapshot = matchedSnapshot(
                     for: identity,
                     title: title,
                     appPID: app.processIdentifier,
                     frame: frame,
-                    snapshotIndex: allSnapshots
+                    snapshotIndex: unmatchedOnScreenSnapshots
                 )
+                let snapshot = onScreenSnapshot ?? matchedSnapshot(
+                    for: identity,
+                    title: title,
+                    appPID: app.processIdentifier,
+                    frame: frame,
+                    snapshotIndex: unmatchedSnapshots
+                )
+                if let snapshot {
+                    unmatchedOnScreenSnapshots.removeAll { $0.windowID == snapshot.windowID }
+                    unmatchedSnapshots.removeAll { $0.windowID == snapshot.windowID }
+                }
                 let isOnCurrentDesktop = snapshot.map { currentOnScreenWindowIDs.contains($0.windowID) } ?? false
                 let preview: NSImage? = nil
 
@@ -167,18 +180,7 @@ final class WindowCatalogService {
             "orderingCandidates items=\(items.count, privacy: .public) snapshotIndex=\(snapshotIndex.count, privacy: .public)"
         )
         return items.enumerated().map { offset, item in
-            let fallbackIndex = matchedSnapshot(
-                for: item.id,
-                title: item.title,
-                appPID: item.id.appPID,
-                frame: CGRect(
-                    x: item.id.frame.x,
-                    y: item.id.frame.y,
-                    width: item.id.frame.width,
-                    height: item.id.frame.height
-                ),
-                snapshotIndex: snapshotIndex
-            )?.order ?? (10_000 + offset)
+            let fallbackIndex = snapshotIndex.first(where: { $0.windowID == item.snapshotWindowID })?.order ?? (10_000 + offset)
 
             return WindowOrderingCandidate(
                 identity: item.id,

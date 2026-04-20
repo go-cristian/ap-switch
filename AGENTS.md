@@ -17,6 +17,7 @@ Guia operativa para futuras sesiones de Codex sobre `ApSwitcher`.
 - `Accessibility` es requisito efectivo para hotkey global y focus de ventanas.
 - La arquitectura actual ya separa una capa pura de sesión (`SwitcherSession.swift`) de los adaptadores sensibles de macOS.
 - El switcher prioriza ventanas del escritorio actual y reconcilia la lista `100ms` después de abrirse para absorber cambios rápidos entre Spaces.
+- El catálogo también prioriza snapshots `on-screen` antes de caer a `allSnapshots`, para reducir colisiones cuando un mismo app tiene ventanas parecidas en escritorios distintos.
 
 ## Mapa del repo
 
